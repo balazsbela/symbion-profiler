@@ -12,7 +12,7 @@
 		<spring.version>3.0.3.RELEASE</spring.version>
 		<mockito.version>1.8.5</mockito.version>
 		<junit.version>4.7</junit.version>
-
+		<asm.version>2.0</asm.version> <!-- upgrade to 3.1 -->
 	</properties>
 
 
@@ -67,59 +67,71 @@
 		</dependency>
 
 		<!-- TEST Stuff -->
-			<dependency>
-				<groupId>org.mockito</groupId>
-				<artifactId>mockito-all</artifactId>
-				<version>${mockito.version}</version>
-				<scope>test</scope>
-			</dependency>
-			
-			<dependency>
-				<groupId>org.springframework</groupId>
-				<artifactId>spring-test</artifactId>
-				<version>${spring.version}</version>
-				<scope>test</scope>
-				<exclusions>
-					<exclusion>
-						<groupId>junit</groupId>
-						<artifactId>junit</artifactId>
-					</exclusion>
-				</exclusions>
-			</dependency>					
-			
-			<dependency>
-				<groupId>junit</groupId>
-				<artifactId>junit</artifactId>
-				<version>${junit.version}</version>
-				<scope>test</scope>
-			</dependency>
-			
-			<dependency>
-			    <groupId>org.codehaus.plexus</groupId>
-			    <artifactId>plexus-resources</artifactId>
-			    <version>1.0-alpha-7</version>
-			</dependency>
-			
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-all</artifactId>
+			<version>${mockito.version}</version>
+			<scope>test</scope>
+		</dependency>
 
-<!-- 		<dependency> -->
-<!-- 			<groupId>org.slf4j</groupId> -->
-<!-- 			<artifactId>slf4j-log4j12</artifactId> -->
-<!-- 			<version>${slf4j.version}</version> -->
-<!-- 		</dependency> -->
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-test</artifactId>
+			<version>${spring.version}</version>
+			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>junit</groupId>
+					<artifactId>junit</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>${junit.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.codehaus.plexus</groupId>
+			<artifactId>plexus-resources</artifactId>
+			<version>1.0-alpha-7</version>
+		</dependency>
+
+
+		<!-- <dependency> -->
+		<!-- <groupId>org.slf4j</groupId> -->
+		<!-- <artifactId>slf4j-log4j12</artifactId> -->
+		<!-- <version>${slf4j.version}</version> -->
+		<!-- </dependency> -->
 
 
 		<!-- ASM Stuff -->
 		<dependency>
 			<groupId>org.ow2.util.asm</groupId>
 			<artifactId>asm</artifactId>
-			<version>3.1</version>
+			<version>${asm.version}</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.ow2.util.asm</groupId>
 			<artifactId>asm-commons</artifactId>
-			<version>3.1</version>
+			<version>${asm.version}</version>
 		</dependency>
+	
+		<dependency>
+			<groupId>org.ow2.util.asm</groupId>
+			<artifactId>asm-attrs</artifactId>
+			<version>${asm.version}</version>
+		</dependency>
+
+<!-- 		<dependency> -->
+<!-- 			<groupId>asm</groupId> -->
+<!-- 			<artifactId>asm-attrs</artifactId> -->
+<!-- 			<version>2.2.3</version> -->
+<!-- 		</dependency> -->
 
 		<dependency>
 			<groupId>com.sun</groupId>
@@ -151,7 +163,8 @@
 				<configuration>
 					<source>${java.version}</source>
 					<target>${java.version}</target>
-					<encoding>${project.build.sourceEncoding}</encoding>
+					<encoding>${project.build.sourceEncoding}</encoding>					
+<!-- 					<compilerArgument>-bootclasspath asm-2.0.jar asm-attrs-2.0.jar asm-commons-2.0.jar</compilerArgument>					 -->
 				</configuration>
 			</plugin>
 
@@ -226,6 +239,57 @@
 					</execution>
 				</executions>
 			</plugin>
+
+<!-- 			<plugin> -->
+<!-- 				<groupId>org.apache.maven.plugins</groupId> -->
+<!-- 				<artifactId>maven-jar-plugin</artifactId> -->
+<!-- 				<version>2.3.1</version> -->
+<!-- 				<configuration> -->
+<!-- 					<archive> -->
+<!-- 						<index>true</index> -->
+<!-- 						<manifest> -->
+<!-- 							<addClasspath>true</addClasspath> -->
+<!-- 						</manifest> -->
+<!-- 						<manifestEntries> -->
+<!-- 							<Premain-Class>sample.profiler.Main</Premain-Class> -->
+<!-- 							<Can-Redefine-Classes>true</Can-Redefine-Classes> -->
+							
+<!-- 							<Main-Class>NotSuitableAsMain</Main-Class> -->
+<!-- 						</manifestEntries> -->
+<!-- 					</archive> -->
+<!-- 				</configuration> -->
+<!-- 			</plugin> -->
+
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<configuration>
+					<archive>
+						<manifestEntries>
+							<Premain-Class>sample.profiler.Main
+							</Premain-Class>
+							<Agent-Class>sample.profiler.Main
+							</Agent-Class>
+							<Can-Redefine-Classes>true</Can-Redefine-Classes>
+							<Can-Retransform-Classes>true</Can-Retransform-Classes>
+						</manifestEntries>
+					</archive>
+					<descriptorRefs>
+						<descriptorRef>jar-with-dependencies
+						</descriptorRef>
+					</descriptorRefs>
+				</configuration>
+				<executions>
+					<execution>
+						<id>make-assembly</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>	
+
+
 		</plugins>
 
 
