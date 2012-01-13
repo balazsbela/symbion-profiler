@@ -41,7 +41,7 @@ public class Profiler {
 				}
 			});
 			if (config.isWaitConnection()) {
-				print(0, "JVM waiting connection from Profiler4j Console...");
+				print(0, "JVM waiting connection console...");
 				synchronized (waitConnectionLock) {
 					waitConnectionLock.wait();
 				}

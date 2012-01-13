@@ -82,6 +82,9 @@ class Server extends Thread {
             } catch (InterruptedException e) {
                 // ignore
             }
+            
+            System.out.println(in.readInt());
+            
             switch (in.readInt()) {
                 case CMD_STARTPROFILING :
                     System.gc();                  
