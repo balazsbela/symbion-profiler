@@ -239,9 +239,9 @@
 				<configuration>
 					<archive>
 						<manifestEntries>
-							<Premain-Class>org.balazsbela.symbion.profiler.Profiler
+							<Premain-Class>org.balazsbela.symbion.profiler.Agent
 							</Premain-Class>
-							<Agent-Class>org.balazsbela.symbion.profiler.Profiler
+							<Agent-Class>org.balazsbela.symbion.profiler.Agent
 							</Agent-Class>
 							<Can-Redefine-Classes>true</Can-Redefine-Classes>
 							<Can-Retransform-Classes>true</Can-Retransform-Classes>

@@ -4,7 +4,7 @@ import static org.balazsbela.symbion.profiler.Log.print;
 
 import java.lang.instrument.Instrumentation;
 
-public class Profiler {
+public class Agent {
 
 	static Transformer t;
 	static Instrumentation inst;
@@ -30,7 +30,7 @@ public class Profiler {
 			BytecodeTransformer.enabled = true;
 			inst.addTransformer(t);
 
-			Profiler.inst = inst;
+			Agent.inst = inst;
 
 			Runtime.getRuntime().addShutdownHook(new Thread() {
 				@Override

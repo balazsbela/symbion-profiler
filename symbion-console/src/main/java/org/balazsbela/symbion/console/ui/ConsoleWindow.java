@@ -1,4 +1,13 @@
 package org.balazsbela.symbion.console.ui;
+
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
+import javax.swing.JComponent;
+import javax.swing.SwingUtilities;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
@@ -11,21 +20,32 @@ import org.eclipse.swt.widgets.TabFolder;
 import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
+import org.symbion.console.client.Client;
+import org.symbion.console.client.ClientException;
 
-
-public class Profiler {
+public class ConsoleWindow {
+	
+	private static final Log log = LogFactory.getLog(ConsoleWindow.class);
 
 	protected Shell shlProfilingConsole;
 	private Table table;
 	private Table table_1;
+	private Button btnConnect;
+
+	Client client;
+
+	public ConsoleWindow() {
+		client = new Client();
+	}
 
 	/**
 	 * Launch the application.
+	 * 
 	 * @param args
 	 */
 	public static void main(String[] args) {
 		try {
-			Profiler window = new Profiler();
+			ConsoleWindow window = new ConsoleWindow();
 			window.open();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -54,15 +74,37 @@ public class Profiler {
 		shlProfilingConsole = new Shell();
 		shlProfilingConsole.setSize(617, 416);
 		shlProfilingConsole.setText("Profiling console");
-		
-		Button btnConnect = new Button(shlProfilingConsole, SWT.NONE);
+
+		btnConnect = new Button(shlProfilingConsole, SWT.NONE);
+		btnConnect.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseDown(MouseEvent arg0) {
+				try {
+					connectToRunningInstance();
+				} catch (ClientException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		});
 		btnConnect.setBounds(10, 10, 75, 25);
 		btnConnect.setText("Connect");
-		
+
 		Button btnStartProfiling = new Button(shlProfilingConsole, SWT.NONE);
+		btnStartProfiling.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseDown(MouseEvent arg0) {
+				try {
+					startProfiling();
+				} catch (ClientException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		});
 		btnStartProfiling.setBounds(91, 10, 84, 25);
 		btnStartProfiling.setText("Start profiling");
-		
+
 		Button btnNewButton = new Button(shlProfilingConsole, SWT.NONE);
 		btnNewButton.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -71,36 +113,84 @@ public class Profiler {
 		});
 		btnNewButton.setBounds(181, 10, 84, 25);
 		btnNewButton.setText("Stop profiling");
-		
+
 		Button btnSettings = new Button(shlProfilingConsole, SWT.NONE);
 		btnSettings.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseDown(MouseEvent arg0) {
-				SettingsDialog sd = new SettingsDialog(shlProfilingConsole,SWT.DIALOG_TRIM);
+				SettingsDialog sd = new SettingsDialog(shlProfilingConsole, SWT.DIALOG_TRIM);
 				sd.open();
 			}
 		});
 		btnSettings.setBounds(282, 10, 75, 25);
 		btnSettings.setText("Settings");
-		
+
 		TabFolder tabFolder = new TabFolder(shlProfilingConsole, SWT.NONE);
 		tabFolder.setBounds(10, 41, 591, 327);
-		
+
 		TabItem tbtmMatchedClasses_1 = new TabItem(tabFolder, SWT.NONE);
 		tbtmMatchedClasses_1.setText("Matched classes");
-		
+
 		table_1 = new Table(tabFolder, SWT.BORDER | SWT.FULL_SELECTION);
 		tbtmMatchedClasses_1.setControl(table_1);
 		table_1.setHeaderVisible(true);
 		table_1.setLinesVisible(true);
-		
+
 		TabItem tbtmThreads = new TabItem(tabFolder, SWT.NONE);
 		tbtmThreads.setText("Threads");
-		
+
 		table = new Table(tabFolder, SWT.BORDER | SWT.FULL_SELECTION);
 		tbtmThreads.setControl(table);
 		table.setHeaderVisible(true);
 		table.setLinesVisible(true);
+
+	}
+
+	void startProfiling() throws ClientException {
+		Thread t = new Thread("SymbionStartProfilingThread") {
+            public void run() {
+        		try {
+					client.startProfiling();
+				} catch (ClientException e) {
+					log.error(e);
+					e.printStackTrace();
+				}
+            };
+        };
+        t.setName("StartProfiling");
+        t.setPriority(Thread.MIN_PRIORITY);
+        t.setDaemon(false);
+        t.start();
+	}
+
+	void connectToRunningInstance() throws ClientException {
+		
+		if(btnConnect.getText().equals("Connect")){
+			btnConnect.setText("Disconnect");
+		}
+		else {
+			btnConnect.setText("Connect");
+		}
+		
+		Thread t = new Thread("SymbionConnectThread") {
+            public void run() {
+        		try {
+        			if(!client.isConnected()) {
+        				client.connect("localhost", 31337);
+        			}
+        			else {
+        				client.disconnect();
+        			}
+				} catch (ClientException e) {
+					log.error(e);
+					e.printStackTrace();
+				}
+            };
+        };
+        t.setName("Connect");
+        t.setPriority(Thread.MIN_PRIORITY);
+        t.setDaemon(false);
+        t.start();
 
 	}
 }

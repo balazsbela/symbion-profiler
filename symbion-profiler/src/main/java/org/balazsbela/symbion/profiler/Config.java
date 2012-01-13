@@ -1,7 +1,7 @@
 package org.balazsbela.symbion.profiler;
 
 public class Config {
-    private int port = 7890;
+    private int port = 31337;
 	private boolean exitVmOnFailure = true;
     private boolean waitConnection = true;
     

@@ -7,6 +7,7 @@ import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+
 import static org.balazsbela.symbion.profiler.Log.print;
 import static org.balazsbela.symbion.profiler.Constants.*;
 
@@ -81,14 +82,18 @@ class Server extends Thread {
                 Thread.sleep(100);
             } catch (InterruptedException e) {
                 // ignore
-            }
-            
-            System.out.println(in.readInt());
+            }                       
             
             switch (in.readInt()) {
-                case CMD_STARTPROFILING :
-                    System.gc();                  
-                    break;              
+                case Constants.CMD_STARTPROFILING :
+                    out.writeInt(Constants.CMD_ACK);
+                    out.flush();                    
+                    print(0, "Profiling requested");
+                    break;        
+                case Constants.CMD_DISCONNECT :
+                    out.writeInt(Constants.CMD_ACK);
+                    out.flush();
+                    return;
                 default :
                     out.writeInt(STATUS_UNKNOWN_CMD);
             }
