@@ -25,6 +25,15 @@ public class Client {
 			s = new Socket(host, port);
 			out = new ObjectOutputStream(new BufferedOutputStream(s.getOutputStream()));
 			in = new ObjectInputStream(new BufferedInputStream(s.getInputStream()));
+
+			String serverVersion = in.readUTF();
+			if (!serverVersion.equals(Constants.VERSION_STRING)) {
+				s.close();
+				s = null;
+				out = null;
+				in = null;
+				throw new ClientException("Incompatible versions!");
+			}
 			log.info("Client connected to " + host + ":" + port);
 		} catch (Exception e) {
 			handleException(e);
@@ -80,6 +89,7 @@ public class Client {
 			throw (ClientException) e;
 		}
 		if (e instanceof IOException) {
+			e.printStackTrace();
 			throw new ClientException("I/O Error", e);
 		}
 		throw new ClientException("Unexpeced Client Error", e);

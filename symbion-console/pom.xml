@@ -115,8 +115,16 @@
 			<artifactId>${swt.artifactId}</artifactId>
 			<version>${swt.version}</version>
 		</dependency>
+		
+		<dependency>
+			<groupId>org.eclipse</groupId>
+			<artifactId>jface</artifactId>
+			<version>3.2.1-M20060908-1000</version>
+		</dependency>
+		
 	</dependencies>
 
+		
 
 	<build>
 		<plugins>

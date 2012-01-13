@@ -8,6 +8,7 @@ import javax.swing.SwingUtilities;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
@@ -152,6 +153,7 @@ public class ConsoleWindow {
         		try {
 					client.startProfiling();
 				} catch (ClientException e) {
+					MessageDialog.openError(shlProfilingConsole, "Error", e.toString());
 					log.error(e);
 					e.printStackTrace();
 				}
@@ -182,6 +184,8 @@ public class ConsoleWindow {
         				client.disconnect();
         			}
 				} catch (ClientException e) {
+					MessageDialog.openError(null, "Error", e.toString());
+
 					log.error(e);
 					e.printStackTrace();
 				}
