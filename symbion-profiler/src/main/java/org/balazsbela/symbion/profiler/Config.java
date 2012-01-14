@@ -3,7 +3,7 @@ package org.balazsbela.symbion.profiler;
 public class Config {
     private int port = 31337;
 	private boolean exitVmOnFailure = true;
-    private boolean waitConnection = false;
+    private boolean waitConnection = true;
     
     public Config(String args) {
 		// TODO Auto-generated constructor stub

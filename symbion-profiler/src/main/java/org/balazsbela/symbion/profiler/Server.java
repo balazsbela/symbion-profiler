@@ -11,8 +11,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 
-import net.sf.profiler4j.agent.Agent;
-
 /**
  * Single-thread daemon that allow remote connections
  * 
@@ -98,9 +96,12 @@ class Server extends Thread {
 				out.writeInt(Constants.CMD_ACK);
 				out.flush();
 				print(0, "Profiling requested");
-				synchronized (Agent.waitConnectionLock) { 
-                     Agent.waitConnectionLock.notifyAll();
-                }
+				if(config.isWaitConnection()) {
+					synchronized (Agent.waitConnectionLock) { 
+	                    Agent.waitConnectionLock.notifyAll();
+	                }					
+				}
+
 				break;
 			case Constants.CMD_DISCONNECT:
 				out.writeInt(Constants.CMD_ACK);
