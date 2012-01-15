@@ -12,11 +12,21 @@ import org.apache.commons.logging.LogFactory;
 
 public class Client {
 	private static final Log log = LogFactory.getLog(Client.class);
-
+	
 	private Socket s;
 	private ObjectOutputStream out;
-	private ObjectInputStream in;
+	private ObjectInputStream in;	
+	private String ruleString;
+	
+	public String getRuleString() {
+		return ruleString;
+	}
 
+	public void setRuleString(String ruleString) {
+		this.ruleString = ruleString;
+	}
+
+	
 	public synchronized void connect(String host, int port) throws ClientException {
 		try {
 			if (isConnected()) {
@@ -116,7 +126,9 @@ public class Client {
 	public synchronized void startProfiling() throws ClientException {
 		verifyConnection();
 		try {
-			log.info("Client sending start profiling command.");
+			log.info("Sending rules.");
+			sendRules();
+			log.info("Client sending start profiling command.");		
 			sendAndWaitAck(Constants.CMD_STARTPROFILING);
 			log.info("Client received response.");
 		} catch (Exception e) {
@@ -124,4 +136,17 @@ public class Client {
 		}
 	}
 
+	public synchronized void sendRules() throws ClientException {
+		verifyConnection();
+		try {
+			log.info("Client sending profiling rules.");
+			out.writeInt(Constants.CMD_RCV_CFG);			
+			out.flush();
+			out.writeUTF(ruleString);
+			out.flush();
+			expectOk();
+		} catch (Exception e) {
+			handleException(e);
+		}
+	}
 }

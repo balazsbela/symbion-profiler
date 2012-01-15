@@ -1,11 +1,26 @@
 package org.balazsbela.symbion.profiler;
 
+import java.util.List;
+import org.balazsbela.symbion.profiler.Rule;
+import org.balazsbela.symbion.profiler.Utils;
+
+
 public class Config {
-    private int port = 31337;
+	private int port = 31337;
 	private boolean exitVmOnFailure = true;
-    private boolean waitConnection = true;
-    
-    public Config(String args) {
+	private boolean waitConnection = true;
+
+	public List<Rule> getRules() {
+		return rules;
+	}
+
+	public void setRules(List<Rule> rules) {
+		this.rules = rules;
+	}
+
+	private List<Rule> rules;
+
+	public Config(String args) {
 		// TODO Auto-generated constructor stub
 	}
 
@@ -24,7 +39,7 @@ public class Config {
 	public void setWaitConnection(boolean waitConnection) {
 		this.waitConnection = waitConnection;
 	}
-    
+
 	public int getPort() {
 		return port;
 	}
@@ -33,5 +48,10 @@ public class Config {
 		this.port = port;
 	}
 
+	//Update Rules.
+	public void parseRules(String rulesAsStr) {
+		// update options
+		rules = Utils.parseRules(rulesAsStr);
+	}
 
 }

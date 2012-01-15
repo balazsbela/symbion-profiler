@@ -2,6 +2,8 @@ package org.balazsbela.symbion.profiler;
 
 import static org.balazsbela.symbion.profiler.Constants.STATUS_UNKNOWN_CMD;
 import static org.balazsbela.symbion.profiler.Log.print;
+import org.balazsbela.symbion.profiler.Utils;
+import org.balazsbela.symbion.profiler.Rule;
 
 import java.io.BufferedOutputStream;
 import java.io.IOException;
@@ -37,10 +39,10 @@ class Server extends Thread {
 				try {
 
 					ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(s.getOutputStream()));
-					
-                    // The client may give up now if not compatible...
-                    out.writeUTF(Constants.VERSION_STRING);
-                    out.flush();
+
+					// The client may give up now if not compatible...
+					out.writeUTF(Constants.VERSION_STRING);
+					out.flush();
 
 					ObjectInputStream in = new ObjectInputStream(s.getInputStream());
 
@@ -95,7 +97,8 @@ class Server extends Thread {
 			case Constants.CMD_STARTPROFILING:
 				out.writeInt(Constants.CMD_ACK);
 				out.flush();
-				print(0, "Profiling requested");
+				print(0, "Profiling requested");								
+				
 				if(config.isWaitConnection()) {
 					synchronized (Agent.waitConnectionLock) { 
 	                    Agent.waitConnectionLock.notifyAll();
@@ -107,6 +110,19 @@ class Server extends Thread {
 				out.writeInt(Constants.CMD_ACK);
 				out.flush();
 				return;
+			case Constants.CMD_RCV_CFG : 
+				//Receive rules
+				String rules = in.readUTF();
+				print(0,rules); 		
+				config.setRules(Utils.parseRules(rules));
+				
+				for(Rule r:config.getRules()) {
+					print(0,r.getPattern());
+				}
+				
+				out.writeInt(Constants.CMD_ACK);
+				out.flush();
+				break;
 			default:
 				out.writeInt(STATUS_UNKNOWN_CMD);
 			}

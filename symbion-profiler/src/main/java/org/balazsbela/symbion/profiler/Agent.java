@@ -3,6 +3,7 @@ package org.balazsbela.symbion.profiler;
 import static org.balazsbela.symbion.profiler.Log.print;
 
 import java.lang.instrument.Instrumentation;
+import org.balazsbela.symbion.profiler.Rule;
 
 public class Agent {
 
@@ -41,8 +42,8 @@ public class Agent {
 				}
 			});
 			if (config.isWaitConnection()) {
-				print(0, "JVM waiting connection console...");
 				synchronized (waitConnectionLock) {
+					print(0, "JVM waiting connection from console...");				
 					waitConnectionLock.wait();
 				}
 			}
@@ -52,4 +53,19 @@ public class Agent {
 		}
 	}
 
+	
+	
+	 // *(*)
+    // com.foo.*(*)
+    // [a-zA-Z\\.\\-\\*]+\\([a-zA-Z\\.\\-\\*\\[\\]\\])
+    private static boolean ruleMatchesClass(Rule r, Class c) {
+        String s = r.getPattern();
+        int p1 = s.indexOf('(');
+        int p2 = s.indexOf(')');
+        if (p1 > 0 && p2 > p1) {
+            s = s.substring(0, p1);
+            return Utils.getRegex(s).matcher(c.getName() + ".").matches();
+        }
+        throw new ProfilerError("Invalid rule pattern '" + s + "'");
+    }
 }

@@ -19,10 +19,12 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TabFolder;
 import org.eclipse.swt.widgets.TabItem;
+import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.symbion.console.client.Client;
 import org.symbion.console.client.ClientException;
+import org.eclipse.swt.widgets.TableColumn;
 
 public class ConsoleWindow {
 	
@@ -30,7 +32,7 @@ public class ConsoleWindow {
 
 	protected Shell shlProfilingConsole;
 	private Table table;
-	private Table table_1;
+	private Table ruleTable;
 	private Button btnConnect;
 
 	Client client;
@@ -132,10 +134,20 @@ public class ConsoleWindow {
 		TabItem tbtmMatchedClasses_1 = new TabItem(tabFolder, SWT.NONE);
 		tbtmMatchedClasses_1.setText("Matched classes");
 
-		table_1 = new Table(tabFolder, SWT.BORDER | SWT.FULL_SELECTION);
-		tbtmMatchedClasses_1.setControl(table_1);
-		table_1.setHeaderVisible(true);
-		table_1.setLinesVisible(true);
+		ruleTable = new Table(tabFolder, SWT.BORDER | SWT.FULL_SELECTION);
+		tbtmMatchedClasses_1.setControl(ruleTable);
+		ruleTable.setHeaderVisible(true);
+		ruleTable.setLinesVisible(true);
+		
+		TableColumn tblclmnPattern = new TableColumn(ruleTable, SWT.NONE);
+		tblclmnPattern.setWidth(569);
+		tblclmnPattern.setText("Pattern");
+		
+		TableItem tableItem = new TableItem(ruleTable, SWT.NONE);
+		tableItem.setText("org.balazsbela.FirmManagement.*");
+		
+		TableItem tableItem_1 = new TableItem(ruleTable, SWT.NONE);
+		tableItem_1.setText("org.balazsbela.AnotherPackage.*");
 
 		TabItem tbtmThreads = new TabItem(tabFolder, SWT.NONE);
 		tbtmThreads.setText("Threads");
@@ -148,7 +160,14 @@ public class ConsoleWindow {
 	}
 
 	void startProfiling() throws ClientException {
-		Thread t = new Thread("SymbionStartProfilingThread") {
+		
+		String ruleString = "";
+		for(TableItem ti:ruleTable.getItems()){
+			ruleString += ti.getText() +":accept" +";";
+		}
+		client.setRuleString(ruleString);
+		
+		Thread t = new Thread("SymbionStartProfilingThread") {			
             public void run() {
         		try {
 					client.startProfiling();
