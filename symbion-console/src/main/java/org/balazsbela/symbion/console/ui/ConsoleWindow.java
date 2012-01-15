@@ -27,7 +27,7 @@ import org.symbion.console.client.ClientException;
 import org.eclipse.swt.widgets.TableColumn;
 
 public class ConsoleWindow {
-	
+
 	private static final Log log = LogFactory.getLog(ConsoleWindow.class);
 
 	protected Shell shlProfilingConsole;
@@ -109,6 +109,17 @@ public class ConsoleWindow {
 		btnStartProfiling.setText("Start profiling");
 
 		Button btnNewButton = new Button(shlProfilingConsole, SWT.NONE);
+		btnNewButton.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseDown(MouseEvent arg0) {
+				try {
+					stopProfiling();
+				} catch (ClientException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		});
 		btnNewButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent arg0) {
@@ -138,16 +149,16 @@ public class ConsoleWindow {
 		tbtmMatchedClasses_1.setControl(ruleTable);
 		ruleTable.setHeaderVisible(true);
 		ruleTable.setLinesVisible(true);
-		
+
 		TableColumn tblclmnPattern = new TableColumn(ruleTable, SWT.NONE);
 		tblclmnPattern.setWidth(569);
 		tblclmnPattern.setText("Pattern");
-		
+
 		TableItem tableItem = new TableItem(ruleTable, SWT.NONE);
-		tableItem.setText("org.balazsbela.FirmManagement.*");
-		
+		tableItem.setText("org.balazsbela.FirmManagement.*(*)");
+
 		TableItem tableItem_1 = new TableItem(ruleTable, SWT.NONE);
-		tableItem_1.setText("org.balazsbela.AnotherPackage.*");
+		tableItem_1.setText("org.balazsbela.AnotherPackage.*(*)");
 
 		TabItem tbtmThreads = new TabItem(tabFolder, SWT.NONE);
 		tbtmThreads.setText("Threads");
@@ -160,60 +171,78 @@ public class ConsoleWindow {
 	}
 
 	void startProfiling() throws ClientException {
-		
+
 		String ruleString = "";
-		for(TableItem ti:ruleTable.getItems()){
-			ruleString += ti.getText() +":accept" +";";
+		for (TableItem ti : ruleTable.getItems()) {
+			ruleString += ti.getText() + ":accept" + ";";
 		}
 		client.setRuleString(ruleString);
-		
-		Thread t = new Thread("SymbionStartProfilingThread") {			
-            public void run() {
-        		try {
+
+		Thread t = new Thread("SymbionStartProfilingThread") {
+			public void run() {
+				try {
 					client.startProfiling();
 				} catch (ClientException e) {
 					MessageDialog.openError(shlProfilingConsole, "Error", e.toString());
 					log.error(e);
 					e.printStackTrace();
 				}
-            };
-        };
-        t.setName("StartProfiling");
-        t.setPriority(Thread.MIN_PRIORITY);
-        t.setDaemon(false);
-        t.start();
+			};
+		};
+		t.setName("StartProfiling");
+		t.setPriority(Thread.MIN_PRIORITY);
+		t.setDaemon(false);
+		t.start();
 	}
 
 	void connectToRunningInstance() throws ClientException {
-		
-		if(btnConnect.getText().equals("Connect")){
+
+		if (btnConnect.getText().equals("Connect")) {
 			btnConnect.setText("Disconnect");
-		}
-		else {
+		} else {
 			btnConnect.setText("Connect");
 		}
-		
+
 		Thread t = new Thread("SymbionConnectThread") {
-            public void run() {
-        		try {
-        			if(!client.isConnected()) {
-        				client.connect("localhost", 31337);
-        			}
-        			else {
-        				client.disconnect();
-        			}
+			public void run() {
+				try {
+					if (!client.isConnected()) {
+						client.connect("localhost", 31337);
+					} else {
+						client.disconnect();
+					}
 				} catch (ClientException e) {
 					MessageDialog.openError(null, "Error", e.toString());
 
 					log.error(e);
 					e.printStackTrace();
 				}
-            };
-        };
-        t.setName("Connect");
-        t.setPriority(Thread.MIN_PRIORITY);
-        t.setDaemon(false);
-        t.start();
+			};
+		};
+		t.setName("Connect");
+		t.setPriority(Thread.MIN_PRIORITY);
+		t.setDaemon(false);
+		t.start();
 
+	}
+
+	void stopProfiling() throws ClientException {
+
+	
+		Thread t = new Thread("SymbionStopProfilingThread") {
+			public void run() {
+				try {
+					client.stopProfiling();
+				} catch (ClientException e) {
+					MessageDialog.openError(shlProfilingConsole, "Error", e.toString());
+					log.error(e);
+					e.printStackTrace();
+				}
+			};
+		};
+		t.setName("StopProfiling");
+		t.setPriority(Thread.MIN_PRIORITY);
+		t.setDaemon(false);
+		t.start();
 	}
 }

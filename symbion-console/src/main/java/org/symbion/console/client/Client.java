@@ -2,6 +2,7 @@ package org.symbion.console.client;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -145,6 +146,24 @@ public class Client {
 			out.writeUTF(ruleString);
 			out.flush();
 			expectOk();
+		} catch (Exception e) {
+			handleException(e);
+		}
+	}
+	
+	public synchronized void stopProfiling() throws ClientException {
+		verifyConnection();
+		try {
+			log.info("Stopping profiling.");				
+			sendAndWaitAck(Constants.CMD_STOPPROFILING);
+			
+			String xml = in.readUTF();
+			
+			FileWriter file = new FileWriter("execution-timeline.xml");
+			file.write(xml);
+			file.close();
+			
+			log.info("Client received response.");
 		} catch (Exception e) {
 			handleException(e);
 		}
