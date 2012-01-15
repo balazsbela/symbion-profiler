@@ -40,4 +40,8 @@ public class Rule {
 		this.pattern = pattern;
 		this.action=action;
 	}
+	
+    public boolean matches(String methodFqn) {
+        return Utils.getRegex(pattern).matcher(methodFqn).matches();
+    }
 }

@@ -4,20 +4,33 @@ import static org.balazsbela.symbion.profiler.Constants.STATUS_UNKNOWN_CMD;
 import static org.balazsbela.symbion.profiler.Log.print;
 import org.balazsbela.symbion.profiler.Utils;
 import org.balazsbela.symbion.profiler.Rule;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.oxm.jaxb.Jaxb2Marshaller;
+
+import generated.ExecutionTimeLineContainer;
 
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.io.StringWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+
+import javax.xml.transform.stream.StreamResult;
 
 /**
  * Single-thread daemon that allow remote connections
  * 
  */
 class Server extends Thread {
+
+	Jaxb2Marshaller marshaller;
 
 	private Config config;
 
@@ -26,6 +39,9 @@ class Server extends Thread {
 		this.config = config;
 		setDaemon(true);
 		setPriority(MAX_PRIORITY);
+		
+		ApplicationContext context = new ClassPathXmlApplicationContext(new String[] {"applicationContext.xml"});
+		marshaller = (Jaxb2Marshaller) context.getBean("marshaller");
 	}
 
 	@Override
@@ -97,12 +113,12 @@ class Server extends Thread {
 			case Constants.CMD_STARTPROFILING:
 				out.writeInt(Constants.CMD_ACK);
 				out.flush();
-				print(0, "Profiling requested");								
-				
-				if(config.isWaitConnection()) {
-					synchronized (Agent.waitConnectionLock) { 
-	                    Agent.waitConnectionLock.notifyAll();
-	                }					
+				print(0, "Profiling requested");
+
+				if (config.isWaitConnection()) {
+					synchronized (Agent.waitConnectionLock) {
+						Agent.waitConnectionLock.notifyAll();
+					}
 				}
 
 				break;
@@ -110,17 +126,30 @@ class Server extends Thread {
 				out.writeInt(Constants.CMD_ACK);
 				out.flush();
 				return;
-			case Constants.CMD_RCV_CFG : 
-				//Receive rules
+			case Constants.CMD_RCV_CFG:
+				// Receive rules
 				String rules = in.readUTF();
-				print(0,rules); 		
+				print(0, rules);
 				config.setRules(Utils.parseRules(rules));
-				
-				for(Rule r:config.getRules()) {
-					print(0,r.getPattern());
+
+				for (Rule r : config.getRules()) {
+					print(0, r.getPattern());
 				}
-				
+
 				out.writeInt(Constants.CMD_ACK);
+				out.flush();
+				break;
+			case Constants.CMD_STOPPROFILING:
+				out.writeInt(Constants.CMD_ACK);
+				out.flush();
+				
+				ExecutionTimeLineContainer timeline = new ExecutionTimeLineContainer();
+				for (String s : ExecutionTimeline.calledMethods) {
+					timeline.getMethodCall().add(s);
+				}
+				java.io.StringWriter sw = new StringWriter();
+				marshaller.marshal(timeline, new StreamResult(sw));
+				out.writeUTF(sw.toString());
 				out.flush();
 				break;
 			default:

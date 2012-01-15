@@ -3,6 +3,9 @@ package org.balazsbela.symbion.profiler;
 import static org.balazsbela.symbion.profiler.Log.print;
 
 import java.lang.instrument.Instrumentation;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.balazsbela.symbion.profiler.Rule;
 
 public class Agent {
@@ -13,6 +16,8 @@ public class Agent {
 	static Config config;
 	volatile static boolean beingShutdown;
 	static final Object waitConnectionLock = new Object();
+    static final Set<String> modifiedClassNames = new HashSet<String>();
+
 
 	public static void premain(String args, Instrumentation inst) {
 
