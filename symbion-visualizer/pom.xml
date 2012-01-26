@@ -209,12 +209,12 @@
 			<artifactId>nifty-default-controls</artifactId>
 			<version>${jmonkey.version}</version>
 		</dependency>
-		<dependency>
-			<!-- WARNING : Large - about 20M -->
-			<groupId>com.jme3</groupId>
-			<artifactId>nifty-examples</artifactId>
-			<version>${jmonkey.version}</version>
-		</dependency>
+<!-- 		<dependency> -->
+<!-- 			WARNING : Large - about 20M  -->
+<!-- 			<groupId>com.jme3</groupId> -->
+<!-- 			<artifactId>nifty-examples</artifactId> -->
+<!-- 			<version>${jmonkey.version}</version> -->
+<!-- 		</dependency> -->
 		<dependency>
 			<groupId>com.jme3</groupId>
 			<artifactId>nifty-style-black</artifactId>
