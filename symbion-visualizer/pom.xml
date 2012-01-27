@@ -255,7 +255,7 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>org.balazsbela.symbion.visualizer.Robot
+							<mainClass>org.balazsbela.symbion.visualizer.Visualizer
 							</mainClass>
 						</manifest>
 					</archive>
