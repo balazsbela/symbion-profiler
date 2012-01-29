@@ -1,15 +1,26 @@
 package org.balazsbela.symbion.visualizer;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.jme3.app.SimpleApplication;
+import com.jme3.asset.AssetManager;
+import com.jme3.collision.CollisionResult;
+import com.jme3.collision.CollisionResults;
 import com.jme3.font.BitmapFont;
 import com.jme3.font.BitmapText;
 import com.jme3.font.Rectangle;
+import com.jme3.input.MouseInput;
+import com.jme3.input.controls.ActionListener;
+import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.light.AmbientLight;
 import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
+import com.jme3.math.Ray;
+import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.post.filters.BloomFilter;
@@ -25,20 +36,18 @@ import com.jme3.ui.Picture;
 import com.jme3.util.SkyFactory;
 
 public class Visualizer extends SimpleApplication {
-	private Material nodeMat;
 
+	private Node clickables;
+	private ResourceManager rm;
+	private Map<String,FunctionNode> fnodes = new HashMap<String, FunctionNode>();
+	
 	public static void main(String[] args) {
 		Visualizer app = new Visualizer();
 		app.start();
 	}
 
 	public void init() {
-		nodeMat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
-		nodeMat.setFloat("Shininess", 32f);
-		nodeMat.setBoolean("UseMaterialColors", true);
-		nodeMat.setColor("Ambient", ColorRGBA.Black);
-		nodeMat.setColor("Diffuse", new ColorRGBA(232f / 256.0f, 227f / 256f, 130f / 256f, 0.7f));
-		nodeMat.setColor("Specular", ColorRGBA.White);
+		rm = new ResourceManager(assetManager);
 	}
 
 	@Override
@@ -50,6 +59,11 @@ public class Visualizer extends SimpleApplication {
 		loadNodes();
 		setupBackground();
 		initLights();
+
+		inputManager.addMapping("Click", new MouseButtonTrigger(MouseInput.BUTTON_RIGHT));
+		inputManager.addListener(actionListener, "Click");
+
+		mouseInput.setCursorVisible(true);
 	}
 
 	@Override
@@ -81,69 +95,43 @@ public class Visualizer extends SimpleApplication {
 
 		viewPort.setClearFlags(false, true, true);
 
-	}
-
-	private Node createLabeledNode(String labelText) {
-		Node globeNode = new Node(labelText);
-		Spatial nodeModel = assetManager.loadModel("assets/Models/node.j3o");
-		nodeModel.setMaterial(nodeMat);
-
-		BitmapFont hyperion = assetManager.loadFont("assets/Fonts/Hyperion.fnt");
-		BitmapText label = new BitmapText(hyperion);
-		label.setText(labelText);
-		label.setColor(new ColorRGBA(232f / 256.0f, 227f / 256f, 130f / 256f, 0.7f));
-		label.setBox(new Rectangle(-1.0f, 0, 10f, 2f));
-		label.setLocalTranslation(-0.4f, -1.3f, 0.0f);
-		label.setSize(0.2f);
-
-		globeNode.attachChild(nodeModel);
-		globeNode.attachChild(label);
-
-		globeNode.move(new Vector3f(10.0f, 0.0f, 0.0f));
-
-		BillboardControl bc = new BillboardControl();
-		bc.setAlignment(BillboardControl.Alignment.Camera);
-		bc.setEnabled(true);
-		nodeModel.addControl(bc);
-
-		BillboardControl bc1 = new BillboardControl();
-		bc1.setAlignment(BillboardControl.Alignment.Camera);
-		bc1.setEnabled(true);
-		label.addControl(bc1);
-
-		return globeNode;
-	}
+	}	
 
 	private Node createArrowNode(String arrowNodeName) {
 		Node arrow = new Node(arrowNodeName);
 
 		Spatial arrowBody = assetManager.loadModel("assets/Models/arrowBody.j3o");
-		arrowBody.setMaterial(nodeMat);
+		arrowBody.setMaterial(ResourceManager.nodeMat);
 		arrowBody.move(new Vector3f(13.0f, -0.2f, 0f));
 
 		Spatial arrowHead = assetManager.loadModel("assets/Models/arrowHead.j3o");
-		arrowHead.setMaterial(nodeMat);
+		arrowHead.setMaterial(ResourceManager.nodeMat);
 		arrowHead.move(new Vector3f(15.0f, 0.05f, 0.335f));
 
 		arrow.attachChild(arrowBody);
 		arrow.attachChild(arrowHead);
-		
+
 		return arrow;
 	}
 
 	private void loadNodes() {
-
+		clickables = new Node("clickables");
 		Node parent = new Node("parentNode");
-		Node globeNode = createLabeledNode("exampleFunction()");
-		Node arrow = createArrowNode("arrow1");
+		FunctionNode globeNode = new FunctionNode("exampleFunction()");
+		fnodes.put("exampleFunction()", globeNode);
 		
-		Node globeNode2 = createLabeledNode("exampleCalledFunction()");
-		globeNode2.move(new Vector3f(6.6f,0f,0f));
-	
-		parent.attachChild(globeNode);
-		parent.attachChild(arrow);
-		parent.attachChild(globeNode2);
+		Node arrow = createArrowNode("arrow1");
 
+		FunctionNode globeNode2 = new FunctionNode("exampleCalledFunction()");
+		fnodes.put("exampleCalledFunction()", globeNode2);
+		
+		globeNode2.getSceneNode().move(new Vector3f(6.6f, 0f, 0f));
+
+		clickables.attachChild(globeNode.getSceneNode());
+		clickables.attachChild(globeNode2.getSceneNode());
+
+		parent.attachChild(arrow);
+		rootNode.attachChild(clickables);
 		rootNode.attachChild(parent);
 
 	}
@@ -175,5 +163,45 @@ public class Visualizer extends SimpleApplication {
 		rootNode.addLight(sun4);
 
 	}
+
+	// Action Listener for click
+
+	private ActionListener actionListener = new ActionListener() {
+
+		public void onAction(String name, boolean keyPressed, float tpf) {
+			if (name.equals("Click") && !keyPressed) {
+				Vector2f mousePos = inputManager.getCursorPosition();
+				Vector3f worldCoords = cam.getWorldCoordinates(mousePos, 0);
+				Vector3f worldCoords2 = cam.getWorldCoordinates(mousePos, 1);
+				Ray mouseRay = new Ray(worldCoords, worldCoords2.subtractLocal(worldCoords).normalizeLocal());
+
+				CollisionResults results = new CollisionResults();
+				
+				clickables.collideWith(mouseRay, results);
+//				for (int i = 0; i < results.size(); i++) {
+//					
+//					float dist = results.getCollision(i).getDistance();
+//					Vector3f pt = results.getCollision(i).getContactPoint();
+//					String hit = results.getCollision(i).getGeometry().getName();
+//					System.out.println("* Collision #" + i);
+//					System.out.println("  You shot " + hit + " at " + pt + ", " + dist + " wu away.");
+//				}
+				if (results.size() > 0) {
+					CollisionResult closest = results.getClosestCollision();
+					FunctionNode fn = fnodes.get(closest.getGeometry().getParent().getName());
+					//System.out.println(closest.getGeometry().getParent().getName());
+					System.out.println(fn.getLabelText());
+										
+					if(closest.getGeometry().getMaterial() == ResourceManager.nodeMat) {
+						closest.getGeometry().setMaterial(ResourceManager.selectedMat);
+						
+					}
+					else {
+						closest.getGeometry().setMaterial(ResourceManager.nodeMat);
+					}
+				} 
+			}
+		}
+	};
 
 }
