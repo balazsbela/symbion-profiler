@@ -1,45 +1,39 @@
 package org.balazsbela.symbion.visualizer;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.jme3.app.SimpleApplication;
-import com.jme3.asset.AssetManager;
 import com.jme3.collision.CollisionResult;
 import com.jme3.collision.CollisionResults;
-import com.jme3.font.BitmapFont;
-import com.jme3.font.BitmapText;
-import com.jme3.font.Rectangle;
 import com.jme3.input.MouseInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.light.AmbientLight;
 import com.jme3.light.DirectionalLight;
-import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Ray;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
-import com.jme3.post.FilterPostProcessor;
-import com.jme3.post.filters.BloomFilter;
 import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.ViewPort;
-import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
-import com.jme3.scene.control.BillboardControl;
 import com.jme3.texture.Texture;
 import com.jme3.texture.Texture2D;
 import com.jme3.ui.Picture;
-import com.jme3.util.SkyFactory;
 
 public class Visualizer extends SimpleApplication {
 
 	private Node clickables;
 	private ResourceManager rm;
-	private Map<String,FunctionNode> fnodes = new HashMap<String, FunctionNode>();
+	private Map<String, FunctionNode> fnodes = new HashMap<String, FunctionNode>();
+	private List<Vector3f> expandDirections = new ArrayList<Vector3f>();
+	private int nodeCount = 0;
 	
 	public static void main(String[] args) {
 		Visualizer app = new Visualizer();
@@ -48,22 +42,44 @@ public class Visualizer extends SimpleApplication {
 
 	public void init() {
 		rm = new ResourceManager(assetManager);
+		initExpandDirections();
+	}
+
+	private void initExpandDirections() {
+		// UP
+		expandDirections.add(new Vector3f(1, 0, 0));
+		// RIGHT
+		expandDirections.add(new Vector3f(0, 1, 0));
+		// DOWN
+		expandDirections.add(new Vector3f(0, -1, 0));
+		// UPRIGHT
+		expandDirections.add(new Vector3f(1, 1, 0));
+		// DOWNRIGHT
+		expandDirections.add(new Vector3f(1, -1, 0));
+		// UPLEFT
+		expandDirections.add(new Vector3f(-1, 1, 0));
+		// DOWNLEFT
+		expandDirections.add(new Vector3f(-1, -1, 0));
 	}
 
 	@Override
 	public void simpleInitApp() {
-		this.flyCam.setMoveSpeed(20);
+		this.flyCam.setMoveSpeed(30);
 		this.cam.lookAt(new Vector3f(0.0f, 0.0f, 0.0f), new Vector3f(0.0f, 1.0f, 0.0f));
-		this.cam.setLocation(new Vector3f(11.0f, 0, 10.0f));
+		this.cam.setLocation(new Vector3f(15.0f, 0, 40.0f));
 		init();
 		loadNodes();
 		setupBackground();
 		initLights();
 
 		inputManager.addMapping("Click", new MouseButtonTrigger(MouseInput.BUTTON_RIGHT));
+		inputManager.addMapping("Grab", new MouseButtonTrigger(MouseInput.BUTTON_MIDDLE));
 		inputManager.addListener(actionListener, "Click");
+		inputManager.addListener(actionListener, "Grab");
+
 
 		mouseInput.setCursorVisible(true);
+		flyCam.setDragToRotate(true);
 	}
 
 	@Override
@@ -95,44 +111,17 @@ public class Visualizer extends SimpleApplication {
 
 		viewPort.setClearFlags(false, true, true);
 
-	}	
-
-	private Node createArrowNode(String arrowNodeName) {
-		Node arrow = new Node(arrowNodeName);
-
-		Spatial arrowBody = assetManager.loadModel("assets/Models/arrowBody.j3o");
-		arrowBody.setMaterial(ResourceManager.nodeMat);
-		arrowBody.move(new Vector3f(13.0f, -0.2f, 0f));
-
-		Spatial arrowHead = assetManager.loadModel("assets/Models/arrowHead.j3o");
-		arrowHead.setMaterial(ResourceManager.nodeMat);
-		arrowHead.move(new Vector3f(15.0f, 0.05f, 0.335f));
-
-		arrow.attachChild(arrowBody);
-		arrow.attachChild(arrowHead);
-
-		return arrow;
 	}
 
 	private void loadNodes() {
 		clickables = new Node("clickables");
-		Node parent = new Node("parentNode");
+		
 		FunctionNode globeNode = new FunctionNode("exampleFunction()");
-		fnodes.put("exampleFunction()", globeNode);
-		
-		Node arrow = createArrowNode("arrow1");
-
-		FunctionNode globeNode2 = new FunctionNode("exampleCalledFunction()");
-		fnodes.put("exampleCalledFunction()", globeNode2);
-		
-		globeNode2.getSceneNode().move(new Vector3f(6.6f, 0f, 0f));
-
+		fnodes.put("exampleFunction()", globeNode);		
 		clickables.attachChild(globeNode.getSceneNode());
-		clickables.attachChild(globeNode2.getSceneNode());
-
-		parent.attachChild(arrow);
 		rootNode.attachChild(clickables);
-		rootNode.attachChild(parent);
+		
+		nodeCount+=2;
 
 	}
 
@@ -176,32 +165,84 @@ public class Visualizer extends SimpleApplication {
 				Ray mouseRay = new Ray(worldCoords, worldCoords2.subtractLocal(worldCoords).normalizeLocal());
 
 				CollisionResults results = new CollisionResults();
-				
-				clickables.collideWith(mouseRay, results);
-//				for (int i = 0; i < results.size(); i++) {
-//					
-//					float dist = results.getCollision(i).getDistance();
-//					Vector3f pt = results.getCollision(i).getContactPoint();
-//					String hit = results.getCollision(i).getGeometry().getName();
-//					System.out.println("* Collision #" + i);
-//					System.out.println("  You shot " + hit + " at " + pt + ", " + dist + " wu away.");
-//				}
+
+				clickables.collideWith(mouseRay, results);				
+
 				if (results.size() > 0) {
 					CollisionResult closest = results.getClosestCollision();
-					FunctionNode fn = fnodes.get(closest.getGeometry().getParent().getName());
-					//System.out.println(closest.getGeometry().getParent().getName());
-					System.out.println(fn.getLabelText());
-										
-					if(closest.getGeometry().getMaterial() == ResourceManager.nodeMat) {
-						closest.getGeometry().setMaterial(ResourceManager.selectedMat);
+					String labelText = closest.getGeometry().getName();
+					FunctionNode fn = fnodes.get(closest.getGeometry().getName());
+					// System.out.println(fn.getLabelText());
+					if (fn!=null && !fn.isExpanded()) {
+						List<String> expandNames = new ArrayList<String>();
+						for(int i=0;i<20;i++) {
+							expandNames.add("node"+nodeCount+"()");
+							nodeCount++;
+						}
+						expand(fn, expandNames);
+						fn.setExpanded(true);
+					} else {
+						if(fn!=null) {
+							// We unexpand it.
+							fn.undoExpansion();
+							fn.setExpanded(false);
+						}
+					}
+				}
+			}
+			else {
+				if(name.equals("Grab")&& !keyPressed) {
+					Vector2f mousePos = inputManager.getCursorPosition();					
+					Vector3f worldCoords = cam.getWorldCoordinates(mousePos, 0);
+					Vector3f worldCoords2 = cam.getWorldCoordinates(mousePos, 1);
+					Ray mouseRay = new Ray(worldCoords, worldCoords2.subtractLocal(worldCoords).normalizeLocal());
+
+					CollisionResults results = new CollisionResults();
+
+					clickables.collideWith(mouseRay, results);				
+
+					if (results.size() > 0) {
+						CollisionResult closest = results.getClosestCollision();
+						String labelText = closest.getGeometry().getName();
+						FunctionNode fn = fnodes.get(closest.getGeometry().getName());
+
 						
 					}
-					else {
-						closest.getGeometry().setMaterial(ResourceManager.nodeMat);
-					}
-				} 
+				}
 			}
 		}
+		
 	};
+
+	protected void expand(FunctionNode fn, List<String> strings) {
+		if (!fn.isExpanded()) {
+			int localZ = 0;
+			int localZSign = 1;
+			int index = 0;
+			float distanceCoef = 12.0f;
+			for (int i = 0; i < strings.size(); i++) {
+				FunctionNode nd = new FunctionNode(strings.get(i));
+				fn.getChildren().attachChild(nd.getSceneNode());
+
+				fnodes.put(strings.get(i), nd);
+
+				if (i > expandDirections.size() * (localZ + 1)) {
+					localZ++;
+					localZSign *= -1;
+				}
+
+				index = i % expandDirections.size();
+				Vector3f direction = expandDirections.get(index);
+				direction.setZ(localZ * localZSign);
+				// Put it in the position of the parent
+				//System.out.println("Adding node in direction:" + direction);
+				nd.getSceneNode().setLocalTranslation(0f, 0f, 0f);
+				nd.getSceneNode().setLocalTranslation(direction.normalize().scaleAdd(distanceCoef, Vector3f.ZERO));
+				Arrow arrow = new Arrow(fn, nd,direction);
+				fn.getArrows().attachChild(arrow.getSceneNode());					
+				
+			}
+		}
+	}
 
 }

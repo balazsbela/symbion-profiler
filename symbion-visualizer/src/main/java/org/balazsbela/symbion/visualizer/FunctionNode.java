@@ -1,5 +1,8 @@
 package org.balazsbela.symbion.visualizer;
 
+import java.util.Map;
+
+import com.jme3.collision.CollisionResult;
 import com.jme3.font.BitmapFont;
 import com.jme3.font.BitmapText;
 import com.jme3.font.Rectangle;
@@ -15,15 +18,12 @@ public class FunctionNode {
 	
 	private Node sceneNode;
 	private String labelText;
+	private boolean isExpanded = false;
+	private Geometry geometry;
 	
-	public Node getSceneNode() {
-		return sceneNode;
-	}
-
-	public void setSceneNode(Node sceneNode) {
-		this.sceneNode = sceneNode;
-	}
-
+	private Node children;
+	private Node arrows;
+	
 	public String getLabelText() {
 		return labelText;
 	}
@@ -34,12 +34,17 @@ public class FunctionNode {
 	
 	public FunctionNode(String labelText) {
 		this.labelText = labelText;
+		children = new Node(labelText+" children");
+		arrows = new Node(labelText+" arrows");
+		
 		sceneNode = new Node(labelText);
 		Node nodeModel = (Node) ResourceManager.nodeModel.clone();
 		nodeModel.setName(labelText);	
-		for(Spatial sp : nodeModel.getChildren()) {
-			sp.setName(labelText);
-		}
+		
+		Spatial spatial = nodeModel.getChild(0);
+		geometry = (Geometry)(((Node)spatial).getChild(0));
+		geometry.setName(labelText);
+				
 		
 		BitmapText label = new BitmapText(ResourceManager.hyperion);
 		label.setText(labelText);
@@ -50,8 +55,10 @@ public class FunctionNode {
 
 		sceneNode.attachChild(nodeModel);
 		sceneNode.attachChild(label);
+		children.attachChild(arrows);
+		sceneNode.attachChild(children);
 		sceneNode.setName(labelText);
-		sceneNode.move(new Vector3f(10.0f, 0.0f, 0.0f));
+		//sceneNode.move(new Vector3f(10.0f, 0.0f, 0.0f));
 
 		BillboardControl bc = new BillboardControl();
 		bc.setAlignment(BillboardControl.Alignment.Camera);
@@ -64,6 +71,54 @@ public class FunctionNode {
 		label.addControl(bc1);
 
 	}
+
+	public boolean isExpanded() {
+		return isExpanded;
+	}
+
+	public void setExpanded(boolean isExpanded) {
+		this.isExpanded = isExpanded;		
+		toggleColor();
+	}
+
+	
+	
+	public Geometry getGeometry() {
+		return geometry;
+	}
+	
+	private void toggleColor() {
+		if(isExpanded) {
+			getGeometry().setMaterial(ResourceManager.selectedMat);		
+		}
+		else {
+			getGeometry().setMaterial(ResourceManager.nodeMat);
+		}
+	}
+
+	public Node getSceneNode() {
+		return sceneNode;
+	}
+
+	public Node getChildren() {
+		return children;
+	}
+
+	public void setChildren(Node children) {
+		this.children = children;
+	}
+
+	public Node getArrows() {
+		return arrows;
+	}
+
+	public void undoExpansion() {
+		arrows.detachAllChildren();
+		children.detachAllChildren();
+		children.attachChild(arrows);		
+	}
+	
+
 
 	
 	

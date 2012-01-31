@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans 
+                           http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/context
+                           http://www.springframework.org/schema/context/spring-context.xsd">
+	
+	<context:annotation-config/>
+	<context:component-scan base-package="org.balazsbela.symbion"/>   
+	
+	<!-- MARSHALLER DEFINITION -->
+	<bean id="marshaller" 
+		class="org.springframework.oxm.jaxb.Jaxb2Marshaller" 
+ 		p:contextPath="org.balazsbela.symbion.models"> 
+	</bean>
+	
+<!-- 	<context:property-placeholder location="classpath:config/URI.properties" /> -->
+<!-- 	<import	resource="classpath:/eu/isdc/internship/riskmanagement/restclient/impl/applicationContext.xml" /> -->
+<!-- 	<import resource="classpath:/eu/isdc/internship/riskmanagement/soapclient/impl/applicationContext.xml"/> -->
+
+<!-- 	<bean id="soapClient.common" class="java.lang.String">  -->
+<!-- 		<constructor-arg> -->
+<!-- 			<value>${defaultSoapUri}</value> -->
+<!-- 		</constructor-arg> -->
+<!-- 	</bean> -->
+
+<!-- 	<bean id="addRiskManagerBean" class="eu.isdc.internship.riskmanagement.presentation.managers.AddRiskManager"> -->
+<!-- 		<property name="riskClient" ref="riskRestClient" /> -->
+<!-- 		<property name="userClient" ref="userRestClient" /> -->
+<!-- 	</bean> -->
+</beans>

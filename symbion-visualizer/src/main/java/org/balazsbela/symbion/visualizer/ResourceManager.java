@@ -4,6 +4,7 @@ import com.jme3.asset.AssetManager;
 import com.jme3.font.BitmapFont;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.Vector3f;
 import com.jme3.scene.Spatial;
 
 public class ResourceManager {
@@ -13,6 +14,9 @@ public class ResourceManager {
 	static Material selectedMat;
 	static Spatial nodeModel; 
 	static BitmapFont hyperion;
+	static Spatial arrowBody;
+	static Spatial arrowHead;
+	static Spatial arrow;
 	
 	public ResourceManager(AssetManager assetManager) {
 		nodeMat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
@@ -33,5 +37,11 @@ public class ResourceManager {
 		nodeModel.setMaterial(nodeMat);
 		
 		hyperion = assetManager.loadFont("assets/Fonts/Hyperion.fnt");
+		
+		arrowBody = assetManager.loadModel("assets/Models/arrowBody.j3o");
+		arrowHead = assetManager.loadModel("assets/Models/arrowHead.j3o");
+		
+		arrow = assetManager.loadModel("assets/Models/arrow.j3o");
+
 	}
 }
