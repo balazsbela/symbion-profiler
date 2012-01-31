@@ -44,9 +44,11 @@ public class Arrow {
 		
 		// end.getSceneNode().getWorldRotation().getRotationColumn(1)
 		//arrowModel.lookAt(end.getSceneNode().getWorldTranslation(), end.getSceneNode().getWorldRotation().getRotationColumn(1));
+		
 		arrowModel.lookAt(end.getSceneNode().getLocalTranslation(), Vector3f.UNIT_Y);
-		arrowModel.scale(1.0f,1.0f,4.0f);
+		arrowModel.scale(1.0f,1.0f,4.2f);
 				
+		
 	}
 
 	public Node getSceneNode() {

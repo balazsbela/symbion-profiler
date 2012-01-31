@@ -88,10 +88,12 @@ public class FunctionNode {
 	
 	private void toggleColor() {
 		if(isExpanded) {
-			getGeometry().setMaterial(ResourceManager.selectedMat);		
+			//getGeometry().setMaterial(ResourceManager.selectedMat);		
+			getGeometry().getMaterial().setColor("Diffuse" , new ColorRGBA(1f, 0f,0f, 0.7f));
 		}
 		else {
-			getGeometry().setMaterial(ResourceManager.nodeMat);
+			//getGeometry().setMaterial(ResourceManager.nodeMat);
+			getGeometry().getMaterial().setColor("Diffuse" , new ColorRGBA(232f / 256.0f, 227f / 256f, 130f / 256f, 0.7f));
 		}
 	}
 
