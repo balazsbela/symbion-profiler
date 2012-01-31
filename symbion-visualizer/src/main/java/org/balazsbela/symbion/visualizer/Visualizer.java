@@ -36,12 +36,19 @@ import de.lessvoid.nifty.Nifty;
 public class Visualizer extends SimpleApplication {
 
 	protected static final int MAX_FUNCTIONS = 10;
+	public static final float EXPAND_COEFICIENT = 11f;
+	protected static final float DEST_ARROW_Z_SCALE = 4.2f;
+	protected float scaleSum = 1.0f;
+
 	private Node clickables;
 	private ResourceManager rm;
 	private Map<String, FunctionNode> fnodes = new HashMap<String, FunctionNode>();
 	private List<Vector3f> expandDirections = new ArrayList<Vector3f>();
 	private int nodeCount = 0;
 	public HudController hudController = new HudController();
+
+	// Animation state
+	List<AnimationState> nodeAnimationBuffer = new ArrayList<AnimationState>();
 
 	public static void main(String[] args) {
 		Visualizer app = new Visualizer();
@@ -59,9 +66,9 @@ public class Visualizer extends SimpleApplication {
 		nifty.registerScreenController(hudController);
 		nifty.fromXml("assets/Interface/ui.xml", "hud");
 		hudController.initialize(stateManager, this);
-		
-		guiViewPort.addProcessor(niftyDisplay);				
-		
+
+		guiViewPort.addProcessor(niftyDisplay);
+
 	}
 
 	private void initExpandDirections() {
@@ -98,7 +105,7 @@ public class Visualizer extends SimpleApplication {
 
 		mouseInput.setCursorVisible(true);
 		flyCam.setDragToRotate(true);
-		
+
 		initGUI();
 
 	}
@@ -106,8 +113,31 @@ public class Visualizer extends SimpleApplication {
 	@Override
 	public void simpleUpdate(float tpf) {
 
-		float animSpeed = 0.8f * tpf;
+		float animSpeed = 2.0f * tpf;
 
+		for (AnimationState as : nodeAnimationBuffer) {
+			// Destinations
+			Vector3f destPos = as.direction.normalize().mult(EXPAND_COEFICIENT);
+			Vector3f currentPos = as.fn.getSceneNode().getLocalTranslation();
+			Vector3f destArrowScale = new Vector3f(1.0f, 1.0f, DEST_ARROW_Z_SCALE);
+
+			if (currentPos.length() < destPos.length()) {
+				// Update by moving the node in the given direction
+				as.fn.getSceneNode().move(destPos.mult(animSpeed));
+			} else {
+				nodeAnimationBuffer.remove(as);
+				break;
+			}
+
+			if (as.arrow.getArrowModel().getLocalScale().length() < destArrowScale.length()) {
+				scaleSum += animSpeed;
+				as.arrow.getArrowModel().scale(1.0f,1.0f,animSpeed*1.3f+1);
+			} else {
+				nodeAnimationBuffer.remove(as);
+				break;				
+			}
+
+		}
 	}
 
 	@Override
@@ -245,7 +275,7 @@ public class Visualizer extends SimpleApplication {
 			int localZ = 0;
 			int localZSign = 1;
 			int index = 0;
-			float distanceCoef = 13.0f;
+			float distanceCoef = EXPAND_COEFICIENT;
 			for (int i = 0; i < strings.size(); i++) {
 				FunctionNode nd = new FunctionNode(strings.get(i));
 				fn.getChildren().attachChild(nd.getSceneNode());
@@ -261,27 +291,36 @@ public class Visualizer extends SimpleApplication {
 				direction.setZ(localZ * localZSign);
 				// Put it in the position of the parent
 				// System.out.println("Adding node in direction:" + direction);
-				// nd.getSceneNode().setLocalTranslation(0f, 0f, 0f);
 				Vector3f vec = direction.normalize().scaleAdd(distanceCoef, Vector3f.ZERO);
-				nd.getSceneNode().move(vec);
+				//nd.getSceneNode().move(vec);
 
-				// nd.getSceneNode().setLocalTranslation(direction.normalize().scaleAdd(distanceCoef,
-				// Vector3f.ZERO));
+				// Create and add arrow.
 				Arrow arrow = new Arrow(fn, nd, direction);
 				fn.getArrows().attachChild(arrow.getSceneNode());
 
+				scheduleAnimation(nd, direction, arrow);
 			}
 		}
 	}
 
+	private void scheduleAnimation(FunctionNode nd, Vector3f vec, Arrow arrow) {
+		AnimationState as = new AnimationState();
+		as.fn = nd;
+		as.direction = vec;
+		as.arrow = arrow;
+		if (!nodeAnimationBuffer.contains(as)) {
+			nodeAnimationBuffer.add(as);
+		}
+	}
+
 	public void search(String searchterm) {
-		System.out.println("Searching for:"+searchterm);
-		for(String key:fnodes.keySet()) {
-			if(key.contains(searchterm)) {
+		System.out.println("Searching for:" + searchterm);
+		for (String key : fnodes.keySet()) {
+			if (key.contains(searchterm)) {
 				FunctionNode fn = fnodes.get(key);
-				cam.setLocation(fn.getSceneNode().getWorldTranslation().add(new Vector3f(0f,0f,10f)));
+				cam.setLocation(fn.getSceneNode().getWorldTranslation().add(new Vector3f(0f, 0f, 10f)));
 				cam.lookAt(fn.getSceneNode().getWorldTranslation(), Vector3f.UNIT_Y);
-				System.out.println("Found:"+key);
+				System.out.println("Found:" + key);
 			}
 		}
 	}

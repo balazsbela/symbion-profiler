@@ -19,6 +19,7 @@ public class Arrow {
 	
 	Node sceneNode;
 	Node pivot;
+	Spatial arrowModel;
 		
 	
 	public Arrow(FunctionNode start,FunctionNode end,Vector3f d) {
@@ -34,24 +35,26 @@ public class Arrow {
 //		arrowHead.setMaterial(ResourceManager.nodeMat);
 //		arrowHead.move(new Vector3f(7.4f, 0.28f, 0.335f));
 
-		Spatial arrowModel = ResourceManager.arrow.clone();
+		arrowModel = ResourceManager.arrow.clone();
 		arrowModel.setMaterial(ResourceManager.nodeMat);
 		
 		arrow.attachChild(arrowModel);			
 		sceneNode = arrow;
 		Node startNode = (Node) end.getSceneNode().getChild(0);
 		Node endNode = (Node) end.getSceneNode().getChild(0);
-		
-		// end.getSceneNode().getWorldRotation().getRotationColumn(1)
-		//arrowModel.lookAt(end.getSceneNode().getWorldTranslation(), end.getSceneNode().getWorldRotation().getRotationColumn(1));
-		
-		arrowModel.lookAt(end.getSceneNode().getLocalTranslation(), Vector3f.UNIT_Y);
-		arrowModel.scale(1.0f,1.0f,4.2f);
+	
+		//arrowModel.lookAt(end.getSceneNode().getLocalTranslation(), Vector3f.UNIT_Y);
+		arrowModel.lookAt(d.mult(Visualizer.EXPAND_COEFICIENT), Vector3f.UNIT_Y);
+//		arrowModel.scale(1.0f,1.0f,4.2f);
 				
 		
 	}
 
 	public Node getSceneNode() {
 		return sceneNode;
+	}
+
+	public Spatial getArrowModel() {
+		return arrowModel;
 	}
 }
