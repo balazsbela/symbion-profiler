@@ -179,8 +179,11 @@ public class Visualizer extends SimpleApplication {
 							expandNames.add("node"+nodeCount+"()");
 							nodeCount++;
 						}
+						
+						System.out.println("Expanding node with:"+fn.getLabelText());
 						expand(fn, expandNames);
 						fn.setExpanded(true);
+						
 					} else {
 						if(fn!=null) {
 							// We unexpand it.
@@ -219,11 +222,10 @@ public class Visualizer extends SimpleApplication {
 			int localZ = 0;
 			int localZSign = 1;
 			int index = 0;
-			float distanceCoef = 12.0f;
+			float distanceCoef = 11.0f;
 			for (int i = 0; i < strings.size(); i++) {
 				FunctionNode nd = new FunctionNode(strings.get(i));
 				fn.getChildren().attachChild(nd.getSceneNode());
-
 				fnodes.put(strings.get(i), nd);
 
 				if (i > expandDirections.size() * (localZ + 1)) {
@@ -236,8 +238,11 @@ public class Visualizer extends SimpleApplication {
 				direction.setZ(localZ * localZSign);
 				// Put it in the position of the parent
 				//System.out.println("Adding node in direction:" + direction);
-				nd.getSceneNode().setLocalTranslation(0f, 0f, 0f);
-				nd.getSceneNode().setLocalTranslation(direction.normalize().scaleAdd(distanceCoef, Vector3f.ZERO));
+				//nd.getSceneNode().setLocalTranslation(0f, 0f, 0f);
+				Vector3f vec = direction.normalize().scaleAdd(distanceCoef, Vector3f.ZERO);
+				nd.getSceneNode().move(vec);
+
+				//nd.getSceneNode().setLocalTranslation(direction.normalize().scaleAdd(distanceCoef, Vector3f.ZERO));
 				Arrow arrow = new Arrow(fn, nd,direction);
 				fn.getArrows().attachChild(arrow.getSceneNode());					
 				

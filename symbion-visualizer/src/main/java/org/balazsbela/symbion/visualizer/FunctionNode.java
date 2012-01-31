@@ -58,7 +58,6 @@ public class FunctionNode {
 		children.attachChild(arrows);
 		sceneNode.attachChild(children);
 		sceneNode.setName(labelText);
-		//sceneNode.move(new Vector3f(10.0f, 0.0f, 0.0f));
 
 		BillboardControl bc = new BillboardControl();
 		bc.setAlignment(BillboardControl.Alignment.Camera);

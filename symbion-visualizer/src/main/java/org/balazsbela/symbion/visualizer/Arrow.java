@@ -39,14 +39,14 @@ public class Arrow {
 		
 		arrow.attachChild(arrowModel);			
 		sceneNode = arrow;
-
-		arrowModel.lookAt(end.getSceneNode().getWorldTranslation(), end.getSceneNode().getWorldRotation().getRotationColumn(1));
+		Node startNode = (Node) end.getSceneNode().getChild(0);
+		Node endNode = (Node) end.getSceneNode().getChild(0);
+		
+		// end.getSceneNode().getWorldRotation().getRotationColumn(1)
+		//arrowModel.lookAt(end.getSceneNode().getWorldTranslation(), end.getSceneNode().getWorldRotation().getRotationColumn(1));
+		arrowModel.lookAt(end.getSceneNode().getLocalTranslation(), Vector3f.UNIT_Y);
 		arrowModel.scale(1.0f,1.0f,4.0f);
-		
-//		Vector3f v1 = start.getSceneNode().getChild(0).getWorldTranslation();
-//		Vector3f v2 = end.getSceneNode().getChild(0).getWorldTranslation();
-//		arrowModel.setLocalRotation(Utils.getRotationTo(v1, v2, Vector3f.ZERO));
-		
+				
 	}
 
 	public Node getSceneNode() {
