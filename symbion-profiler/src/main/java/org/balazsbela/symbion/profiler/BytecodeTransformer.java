@@ -117,13 +117,15 @@ public class BytecodeTransformer {
 		@Override
 		protected void onMethodEnter() {
 			mv.visitLdcInsn(new String(methodName));
-			mv.visitMethodInsn(INVOKESTATIC, "org/balazsbela/symbion/profiler/ThreadProfiler", "enterMethod", "(Ljava/lang/String;)V");
+			mv.visitVarInsn(Opcodes.ALOAD, 0);
+			mv.visitMethodInsn(INVOKESTATIC, "org/balazsbela/symbion/profiler/ThreadProfiler", "enterMethod", "(Ljava/lang/String;Ljava/lang/Object;)V");
 		}
 
 		@Override
 		protected void onMethodExit(int opcode) {
 			mv.visitLdcInsn(new String(methodName));
-			mv.visitMethodInsn(INVOKESTATIC, "org/balazsbela/symbion/profiler/ThreadProfiler", "exitMethod", "(Ljava/lang/String;)V");
+			mv.visitVarInsn(Opcodes.ALOAD, 0);
+			mv.visitMethodInsn(INVOKESTATIC, "org/balazsbela/symbion/profiler/ThreadProfiler", "exitMethod", "(Ljava/lang/String;Ljava/lang/Object;)V");
 		}
 	}
 

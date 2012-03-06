@@ -1,5 +1,7 @@
 package org.balazsbela.symbion.profiler;
 
+import java.lang.reflect.Field;
+
 
 public class ThreadProfiler {
 	
@@ -39,13 +41,30 @@ public class ThreadProfiler {
      * Records a method's entry. This method is called by instrumented code.
      * 
      * @param globalMethodId
+     * @throws IllegalAccessException 
+     * @throws IllegalArgumentException 
      * @see #newMethod(String)
      */
-    public static void enterMethod(String globalMethod) {
+    public static void enterMethod(String globalMethod,Object o) {    	
         final Thread ct = Thread.currentThread();
    
         synchronized (globalLock) {
            System.out.println("Entered:"+ globalMethod);
+           
+           System.out.println("Current class:"+o.getClass().getName());
+           System.out.println("Class has the following fields with the following values:");
+           for(Field field : o.getClass().getDeclaredFields()) {
+        	   try {
+        		field.setAccessible(true);
+				System.out.println(field.getName()+" "+field.get(o));
+			} catch (IllegalArgumentException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+           }
            ExecutionTimeline.calledMethods.add(globalMethod);
         }
     }
@@ -55,10 +74,10 @@ public class ThreadProfiler {
      * @param globalMethodId
      * @see #newMethod(String)
      */
-    public static void exitMethod(String globalMethod) {
-        final Thread ct = Thread.currentThread();
+    public static void exitMethod(String globalMethod,Object o) {
+        final Thread ct = Thread.currentThread();               
         synchronized (globalLock) {
-            System.out.println("Exited:"+globalMethod);
+            System.out.println("Exited:"+globalMethod + " from object of class:"+o.getClass().getName());
 
         }
     }
