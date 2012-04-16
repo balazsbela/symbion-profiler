@@ -13,7 +13,7 @@ public class Agent {
 	static Transformer t;
 	static Instrumentation inst;
 	static Server server;
-	static Config config;
+	public static Config config;
 	volatile static boolean beingShutdown;
 	static final Object waitConnectionLock = new Object();
     static final Set<String> modifiedClassNames = new HashSet<String>();

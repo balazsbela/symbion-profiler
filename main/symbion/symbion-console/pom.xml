@@ -1,0 +1,89 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>symbion-console</artifactId>
+	<name>Symbion Profiler</name>
+	<parent>
+		<groupId>org.balazsbela.symbion</groupId>
+		<artifactId>symbion-parent</artifactId>
+		<version>1.0.0</version>
+	</parent>
+
+	<properties>
+		<swt.groupId>org.eclipse.swt.win32.x86</swt.groupId>
+		<swt.artifactId>swt</swt.artifactId>
+		<swt.version>3.738</swt.version>
+	</properties>
+
+
+	<dependencies>
+
+		<dependency>
+			<groupId>org.balazsbela.symbion</groupId>
+			<artifactId>symbion-commons</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>${swt.groupId}</groupId>
+			<artifactId>${swt.artifactId}</artifactId>
+			<version>${swt.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.eclipse</groupId>
+			<artifactId>jface</artifactId>
+			<version>3.2.1-M20060908-1000</version>
+		</dependency>
+
+	</dependencies>
+
+
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>${java.version}</source>
+					<target>${java.version}</target>
+					<encoding>${project.build.sourceEncoding}</encoding>
+				</configuration>
+				<version>2.3.2</version>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-eclipse-plugin</artifactId>
+				<configuration>
+					<downloadSources>true</downloadSources>
+				</configuration>
+				<version>2.8</version>
+			</plugin>
+
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<configuration>
+					<archive>
+						<manifest>
+							<mainClass>org.balazsbela.symbion.console.ui.ConsoleWindow
+							</mainClass>
+						</manifest>
+					</archive>
+					<descriptorRefs>
+						<descriptorRef>jar-with-dependencies
+						</descriptorRef>
+					</descriptorRefs>
+				</configuration>
+				<executions>
+					<execution>
+						<id>make-assembly</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+</project>

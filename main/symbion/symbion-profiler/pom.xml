@@ -1,0 +1,90 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>symbion-profiler</artifactId>
+	<name>Symbion Profiler</name>
+	<parent>
+		<groupId>org.balazsbela.symbion</groupId>
+		<artifactId>symbion-parent</artifactId>
+		<version>1.0.0</version>
+	</parent>
+
+	<properties>	
+		<asm.version>3.0_RC1</asm.version>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.balazsbela.symbion</groupId>
+			<artifactId>symbion-commons</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+		
+		<!-- ASM Stuff -->
+		<dependency>
+			<groupId>org.ow2.util.asm</groupId>
+			<artifactId>asm-all</artifactId>
+			<version>${asm.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.sun</groupId>
+			<artifactId>tools</artifactId>
+			<version>1.7.0_02</version>
+			<scope>system</scope>
+			<systemPath>${java.home}/../lib/tools.jar</systemPath>
+		</dependency>
+	</dependencies>
+
+
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>${java.version}</source>
+					<target>${java.version}</target>
+					<encoding>${project.build.sourceEncoding}</encoding>					
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-eclipse-plugin</artifactId>
+				<configuration>
+					<downloadSources>true</downloadSources>
+				</configuration>
+				<version>2.8</version>
+			</plugin>
+			
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<configuration>
+					<archive>
+						<manifestEntries>
+							<Premain-Class>org.balazsbela.symbion.profiler.Agent
+							</Premain-Class>
+							<Agent-Class>org.balazsbela.symbion.profiler.Agent
+							</Agent-Class>
+							<Can-Redefine-Classes>true</Can-Redefine-Classes>
+							<Can-Retransform-Classes>true</Can-Retransform-Classes>
+						</manifestEntries>
+					</archive>
+					<descriptorRefs>
+						<descriptorRef>jar-with-dependencies
+						</descriptorRef>
+					</descriptorRefs>
+				</configuration>
+				<executions>
+					<execution>
+						<id>make-assembly</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+</project>
