@@ -1,1 +1,1 @@
-java -javaagent:D:\Programming\thesis\research\FirmManagement\bin\profiler-1.0-jar-with-dependencies.jar -classpath D:\Programming\thesis\research\FirmManagement\bin  FirmManagement
+java -javaagent:D:\Programming\thesis\research\FirmManagement\bin\symbion-profiler-1.0.0-jar-with-dependencies.jar -classpath D:\Programming\thesis\research\FirmManagement\bin  FirmManagement

@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.balazsbela.symbion.config.Config;
+import org.balazsbela.symbion.config.Rule;
 import org.balazsbela.symbion.models.*;
 import org.objectweb.asm.ClassAdapter;
 import org.objectweb.asm.ClassReader;
@@ -19,12 +21,13 @@ import static org.balazsbela.symbion.profiler.Log.print;
 
 public class BytecodeTransformer {
 
-	public static boolean enabled;
+	private static boolean enabled;
 	static EnterExitClassAdapter cv;
+	static boolean ipcStarted = false;
 
 	public static byte[] transform(String className, ClassLoader loader, byte[] classBytes, Config config)
 			throws IOException {
-		if (!enabled) {
+		if (!enabled) {			
 			return null;
 		}
 
@@ -69,8 +72,7 @@ public class BytecodeTransformer {
 
 	/**
 	 * Custom class adapter that modifies methods by an around advice.
-	 * 
-	 * @author Antonio S. R. Gomes
+	 * 	 
 	 */
 	private static class EnterExitClassAdapter extends ClassAdapter {
 		Type classType;
@@ -107,12 +109,21 @@ public class BytecodeTransformer {
 			String globalName = names[0];
 			String localName = names[1];
 			if (canProfileMethod(classType, access, name, desc, signature, exceptions, config, globalName, localName)) {
-				print(0, "Profiling method:" + globalName);
+				if (ThreadProfiler.isDebugEnabled()) {
+					print(0, "Profiling method:" + globalName);
+					if(Agent.getConfig() == null) {
+						print(0,"Agent null!");
+					}
+				}
 				if (changedMethods == 0) {
 					Log.print(1, "Instrumenting class " + classType.getClassName());
 				}
 				int gmid = ThreadProfiler.newMethod(globalName);
-				Log.print(3, "    method " + localName);
+
+				if (ThreadProfiler.isDebugEnabled()) {
+					Log.print(3, "    method " + localName);
+				}
+				
 				MethodVisitor mv = cv.visitMethod(access, name, desc, signature, exceptions);
 				EnterExitAdviceAdapter ma = new EnterExitAdviceAdapter(mv, access, name, desc, gmid, globalName);
 				changedMethods++;
@@ -136,44 +147,75 @@ public class BytecodeTransformer {
 		}
 
 		@Override
-		protected void onMethodEnter() {
+		protected void onMethodEnter() {	
+//			String a="";
+//			Server s = Agent.getServer();
+//
+//			ThreadProfiler.enterMethod(a, s);
+						
+			
+		//	ThreadProfiler.startRMIService();
+			if(!ipcStarted) {
+				mv.visitMethodInsn(INVOKESTATIC, "org/balazsbela/symbion/profiler/ThreadProfiler", "startRMIService",
+						"()V");
+				ipcStarted = true;
+			}
+		    
 			mv.visitLdcInsn(new String(methodName));
-			mv.visitVarInsn(Opcodes.ALOAD, 0);
+//			mv.visitVarInsn(Opcodes.ASTORE,1);
+//
+//			mv.visitMethodInsn(INVOKESTATIC,
+//					 "org/balazsbela/symbion/profiler/Agent", "getServer",
+//					 "()Lorg/balazsbela/symbion/profiler/Server;");
+//			mv.visitVarInsn(Opcodes.ASTORE, 2);
+//			
+//			//Server s = Agent.getServer();
+//			mv.visitVarInsn(Opcodes.ALOAD, 1);
+//			mv.visitVarInsn(Opcodes.ALOAD, 2);
+//
+//			 mv.visitMethodInsn(INVOKESTATIC,
+//			 "org/balazsbela/symbion/profiler/ThreadProfiler", "enterMethod",
+//			 "(Ljava/lang/String;Lorg/balazsbela/symbion/profiler/Server;)V");
 			mv.visitMethodInsn(INVOKESTATIC, "org/balazsbela/symbion/profiler/ThreadProfiler", "enterMethod",
-					"(Ljava/lang/String;Ljava/lang/Object;)V");
+					"(Ljava/lang/String;)V");
 		}
 
 		@Override
 		protected void onMethodExit(int opcode) {
 			mv.visitLdcInsn(new String(methodName));
-			mv.visitVarInsn(Opcodes.ALOAD, 0);
+			// mv.visitVarInsn(Opcodes.ALOAD, 0);
+			// mv.visitMethodInsn(INVOKESTATIC,
+			// "org/balazsbela/symbion/profiler/ThreadProfiler", "exitMethod",
+			// "(Ljava/lang/String;Ljava/lang/Object;)V");
 			mv.visitMethodInsn(INVOKESTATIC, "org/balazsbela/symbion/profiler/ThreadProfiler", "exitMethod",
-					"(Ljava/lang/String;Ljava/lang/Object;)V");
+					"(Ljava/lang/String;)V");
 		}
 
-//		@Override
-//		public void visitMethodInsn(int opcode, String owner, String name, String desc) {
-//			if (owner.startsWith("org.balazsbela.FirmManagement")) {
-//				System.out.println("Method call:"+ methodName+"->" + owner + "." + desc);
-//			}
-//			System.out.println();
-//			super.visitMethodInsn(opcode, owner, name, desc);
-//		}
+		// @Override
+		// public void visitMethodInsn(int opcode, String owner, String name,
+		// String desc) {
+		// if (owner.startsWith("org.balazsbela.FirmManagement")) {
+		// System.out.println("Method call:"+ methodName+"->" + owner + "." +
+		// desc);
+		// }
+		// System.out.println();
+		// super.visitMethodInsn(opcode, owner, name, desc);
+		// }
 
 		@Override
 		public void visitLineNumber(int line, Label start) {
 			this.line = line;
 		}
 
-//		@Override
-//		public void visitEnd() {
-//			// System.out.println("Adding to the list of callees of "+
-//			// methodName+" "+cv.className+"."+cv.methodName+ " "+
-//			// cv.methodDesc+" "+cv.source+" "+ line);
-//			// System.out.println();
-//			// callees.add(new Callee(cv.className, cv.methodName,
-//			// cv.methodDesc, cv.source, line));
-//		}
+		// @Override
+		// public void visitEnd() {
+		// // System.out.println("Adding to the list of callees of "+
+		// // methodName+" "+cv.className+"."+cv.methodName+ " "+
+		// // cv.methodDesc+" "+cv.source+" "+ line);
+		// // System.out.println();
+		// // callees.add(new Callee(cv.className, cv.methodName,
+		// // cv.methodDesc, cv.source, line));
+		// }
 	}
 
 	private static String[] makeMethodName(Type classType, String methodName, String methodDescriptor) {
@@ -198,25 +240,34 @@ public class BytecodeTransformer {
 
 	private static boolean canProfileMethod(Type classType, int access, String name, String desc, String signature,
 			String[] exceptions, Config config, String globalName, String localName) {
+		
+		if (!enabled) {
+			return false;
+		}			
+
 		if (((access & Opcodes.ACC_ABSTRACT) | (access & Opcodes.ACC_NATIVE) | (access & Opcodes.ACC_SYNTHETIC)) != 0) {
 			return false;
 		}
 
-		if (globalName.startsWith("org.balazsbela.FirmManagement")) {
-			// Log.print(0, "Checking if can profile:" + globalName);
+		if(globalName.startsWith("org.balazsbela.symbion")){
+			return false;
 		}
-
+		
 		List<Rule> rules = config.getRules();
 		if (rules == null) {
 			return false;
 		}
+
+		for (Rule rule : rules) {
+			if (rule.matches(globalName)) {
+				if (rule.getAction() == Rule.Action.REJECT) {
+					return false;
+				}
+			}
+		}
+
 		Rule selectedRule = null;
 		for (Rule rule : rules) {
-			if (globalName.startsWith("org.balazsbela.FirmManagement")) {
-				// Log.print(0, "Checking pattern:" + rule.getPattern() +
-				// " for " + globalName);
-			}
-
 			if (rule.matches(globalName)) {
 				// Log.print(0, "Matched rule!");
 				selectedRule = rule;
@@ -232,5 +283,14 @@ public class BytecodeTransformer {
 
 		return false;
 	}
+
+	public static boolean isEnabled() {
+		return enabled;
+	}
+
+	public static void setEnabled(boolean enabled) {
+		BytecodeTransformer.enabled = enabled;
+	}
+
 
 }

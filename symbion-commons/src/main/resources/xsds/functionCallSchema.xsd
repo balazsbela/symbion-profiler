@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema version="1.0" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:element name="functioncalls" type="functionCallListWrapper"/>
+
+  <xs:complexType name="functionCallListWrapper">
+    <xs:sequence>
+      <xs:element name="calledMethods" type="functionCall" nillable="true" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="functionCall">
+    <xs:sequence>
+      <xs:element name="lineNumber" type="xs:long"/>
+      <xs:element name="parent" type="function" minOccurs="0"/>
+      <xs:element name="parentThread" type="threadModel" minOccurs="0"/>
+      <xs:element name="target" type="function" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="function">
+    <xs:sequence>
+      <xs:element name="containingClassName" type="xs:string" minOccurs="0"/>
+      <xs:element name="lineNumber" type="xs:long"/>
+      <xs:element name="methodName" type="xs:string" minOccurs="0"/>
+      <xs:element name="methodSignature" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="threadModel">
+    <xs:sequence>
+      <xs:element name="groupName" type="xs:string" minOccurs="0"/>
+      <xs:element name="id" type="xs:long"/>
+      <xs:element name="name" type="xs:string" minOccurs="0"/>
+      <xs:element name="priority" type="xs:int"/>
+      <xs:element name="state" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:schema>
+

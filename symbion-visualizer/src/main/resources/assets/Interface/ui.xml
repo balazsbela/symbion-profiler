@@ -3,21 +3,80 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://nifty-gui.sourceforge.net/nifty-1.3.xsd http://nifty-gui.sourceforge.net/nifty-1.3.xsd">
 	<useControls filename="nifty-default-controls.xml" />
+	<useControls filename="assets/Interface/nifty-textarea.xml"/>
+	<useControls filename="assets/Interface/nifty-legend.xml"/>
+	
 	<useStyles filename="nifty-default-styles.xml" />
 
 	<screen id="hud" controller="org.balazsbela.symbion.overlays.controllers.HudController">
 		<layer id="background" childLayout="center">
 		</layer>
-		<layer id="foreground" backgroundColor="#0000" childLayout="horizontal">
-			<panel id="panel_left" width="100%" height="10%" childLayout="vertical">
-<!-- 				<text text="Search" font="assets/Interface/Fonts/verdana-48-regular.fnt" /> -->
-													
-					<control id="searchButton" name="button" label="Search" valign="center" width="20%" height="20%" visibleToMouse="true">
+		<layer id="foreground" childLayout="vertical">
+			<panel id="panel_top" height="5%" childLayout="horizontal" align="center" >
+<!-- 				<text text="Search" font="assets/Interface/Fonts/verdana-48-regular.fnt" /> -->																	
+					<control id="searchText" name="textfield" color="#000" text="" width="10%" height="100%" >
+					</control>		
+					<text text=" " font="Interface/Fonts/Default.fnt" width="2%" height="100%" />
+					<control id="searchButton" name="button" label="Search" valign="center" width="7%" height="100%" visibleToMouse="true">
 						<interact onClick="searchButtonClicked()"/>
+					</control>										
+					<text text=" " font="Interface/Fonts/Default.fnt" width="1%" height="100%" />					
+					<control id="hideButton" name="button" label="Toggle source" valign="center" width="7%" height="100%" visibleToMouse="true">
+						<interact onClick="hideSource()"/>
 					</control>	
-					<control id="searchText" name="textfield" color="#000" text="" backgroundColor="#0f07" width="20%" height="20%" >
-					</control>				
-			</panel>
+					
+					<text text=" " font="Interface/Fonts/Default.fnt" width="1%" height="100%" />					
+					
+					<control id="nrNodesField" name="textfield" text="25" color="#000" width="3%" height="100%" >
+					</control>
+					
+					<text text="nodes from:" font="Interface/Fonts/Default.fnt" width="7%" height="100%" />					
+					
+					<control id="offsetField" name="textfield" text="0" color="#000" width="2%" height="100%" >
+					</control>
+					<text id="offsetText" text="/?" font="Interface/Fonts/Default.fnt" width="4%" height="100%" />					
+					
+					<control id="offsetButton" name="button" label="Set" valign="center" width="5%" height="100%" visibleToMouse="true">
+						<interact onClick="applyButtonClicked()"/> 
+					</control>								
+					
+					<text text=" " font="Interface/Fonts/Default.fnt" width="1%" height="100%" />					
+					<text id="fullFunctionName" text=" " font="Interface/Fonts/Default.fnt" width="50%" height="100%" />										
+			</panel>			
+							
+			<panel id="panel_center" width="98%" height="90%" childLayout="horizontal" valign="center" align="right">	
+			
+					<panel id="legend" width="39%" valign="top" childLayout="vertical" align="left">
+						<text text=" " font="Interface/Fonts/Default.fnt" width="100%" height="3%" />										
+						<control id="legendControl" name="classlegend" width="100%" height="95%" areaColor="#fffd" />
+					</panel>											
+					
+					<panel id="srcplaceholder" width="2%" align="center" valign="top"/>
+					
+					<panel id="sourcePanel" width="59%" valign="top" childLayout="vertical" align="right">					
+						<text text=" " font="Interface/Fonts/Default.fnt" width="100%" height="3%" />										
+						<control id="sourceText" name="textarea" width="100%" height="90%" areaColor="#fffd" />
+						<text text=" " font="Interface/Fonts/Default.fnt" width="100%" height="1%" />										
+												
+						<panel id="findPanel" childLayout="horizontal" width="100%" height="5%">
+							<control id="findText" name="textfield" color="#000" text="" width="30%" height="100%" >
+							</control>		
+							<text text=" " font="Interface/Fonts/Default.fnt" width="2%" height="100%" />
+							<control id="findButton" name="button" label="Highlight" valign="center" width="7%" height="100%" visibleToMouse="true">
+								<interact onClick="highlightPhrase()"/>
+							</control>								
+							<text text=" " font="Interface/Fonts/Default.fnt" width="2%" height="100%" />
+							
+							<control id="classLoad" name="textfield" color="#000" text="" width="30%" height="100%" >
+							</control>		
+							<text text=" " font="Interface/Fonts/Default.fnt" width="2%" height="100%" />
+							<control id="classLoadButton" name="button" label="Load class" valign="center" width="9%" height="100%" visibleToMouse="true">
+								<interact onClick="loadClassFromText()"/>
+							</control>								
+						</panel>
+					</panel>	
+			</panel>					
+								
 			
 		</layer>		
 	</screen>

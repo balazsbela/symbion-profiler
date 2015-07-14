@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nifty-controls>
+
+	<controlDefinition name="classlegend"
+		controller="org.balazsbela.symbion.overlays.controllers.LegendControl">
+		<panel childLayout="vertical" height="$height" width="$width"
+			backgroundColor="#00000000" valign="top">
+			<control name="scrollPanel" id="legendScrollpanel"
+				horizontal="false" height="100%" width="100%" backgroundColor="$areaColor" valign="top">
+				<panel id="legendPanel" childLayout="vertical" backgroundColor="$areaColor" height="100%" width="100%" valign="top">					
+				</panel>
+			</control>
+		</panel>
+	</controlDefinition>
+</nifty-controls>

@@ -6,25 +6,29 @@ import java.lang.instrument.Instrumentation;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.balazsbela.symbion.profiler.Rule;
+import org.balazsbela.symbion.config.Config;
+import org.balazsbela.symbion.config.Rule;
+import org.balazsbela.symbion.errors.ProfilerError;
+import org.balazsbela.symbion.models.ExecutionTimeline;
+import org.balazsbela.symbion.utils.Utils;
 
 public class Agent {
 
-	static Transformer t;
-	static Instrumentation inst;
-	static Server server;
-	static Config config;
+	private static Transformer t;
+	private static Instrumentation inst;
+	private static Server server;
+	private static final Config config = new Config();
 	volatile static boolean beingShutdown;
 	static final Object waitConnectionLock = new Object();
+	static final Object rmiLock = new Object();
+
     static final Set<String> modifiedClassNames = new HashSet<String>();
-
-
 	public static void premain(String args, Instrumentation inst) {
 
 		try {
-			config = new Config(args);
+					
 			server = new Server(config);
-			server.start();
+			server.start();		
 			try {
 				// warm-up time (sometimes needed)
 				Thread.sleep(100);
@@ -32,8 +36,15 @@ public class Agent {
 				// ignore
 			}
 
+			if (config.isWaitConnection()) {
+				synchronized (waitConnectionLock) {
+					print(0, "JVM waiting connection from console...");				
+					waitConnectionLock.wait();
+				}
+			}
+					
 			t = new Transformer(config);
-			BytecodeTransformer.enabled = true;
+			BytecodeTransformer.setEnabled(true);
 			inst.addTransformer(t);
 
 			Agent.inst = inst;
@@ -42,24 +53,19 @@ public class Agent {
 				@Override
 				public void run() {
 					beingShutdown = true;
-					BytecodeTransformer.enabled = false;
+					BytecodeTransformer.setEnabled(false);
 					print(0, "Profiler stopped");
 				}
 			});
-			if (config.isWaitConnection()) {
-				synchronized (waitConnectionLock) {
-					print(0, "JVM waiting connection from console...");				
-					waitConnectionLock.wait();
-				}
-			}
+			
 		} catch (Throwable any) {
 			print(0, "UNEXPECTED ERROR", any);
 			System.exit(1);
 		}
 	}
 
-	
-	
+
+
 	 // *(*)
     // com.foo.*(*)
     // [a-zA-Z\\.\\-\\*]+\\([a-zA-Z\\.\\-\\*\\[\\]\\])
@@ -73,4 +79,14 @@ public class Agent {
         }
         throw new ProfilerError("Invalid rule pattern '" + s + "'");
     }
+
+
+	public static Config getConfig() {
+		return config;
+	}
+
+	public static Server getServer() {
+		return server;
+	}
+
 }

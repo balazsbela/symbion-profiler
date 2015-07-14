@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nifty-controls>
+	<!-- Line wrapping text area -->
+	<controlDefinition name="textarea" controller="org.balazsbela.symbion.overlays.controllers.TextareaControl">
+		<panel childLayout="center" height="$height" width="$width"
+			backgroundColor="#00000000">
+			<control name="scrollPanel" id="textScrollpanel" horizontal="false"
+				height="100%" width="100%" backgroundColor="$areaColor">
+				<panel id="textpanel" childLayout="horizontal"
+					backgroundColor="$areaColor" height="100%" width="100%">							
+					<text id="areatext" style="base-font" color="$textColor" width="94%" />
+				</panel>
+			</control>
+		</panel>
+	</controlDefinition>		
+</nifty-controls>

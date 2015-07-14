@@ -5,10 +5,13 @@ import static org.balazsbela.symbion.profiler.ThreadProfiler.globalLock;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
+
+import org.balazsbela.symbion.config.Config;
+
 import static org.balazsbela.symbion.profiler.Log.print;
 
 public class Transformer implements ClassFileTransformer {
-	private Config config;
+	private final Config config;
 
 	public Transformer(Config config) {
 		this.config = config;
@@ -21,13 +24,7 @@ public class Transformer implements ClassFileTransformer {
 			return null;
 		}
 		className = className.replace('/', '.');
-//		if(className.startsWith("org.balazsbela.")) {
-//			print(0,"Inspecting class "+ className );
-//			if(rejectByDefault(className)) {
-//				print(0,"Rejected!");
-//			}
-//		}
-		//print(0, "Inspecting classname:"+className);
+
 		if (rejectByDefault(className)) {
 			//print(0, "Rejecting");
 			return null;
@@ -61,7 +58,7 @@ public class Transformer implements ClassFileTransformer {
             return true;
         }
         if (className.startsWith("org.balazsbela.symbion")) {
-            return false;
+            return true;
         }
         //
         // *** WARNING ****

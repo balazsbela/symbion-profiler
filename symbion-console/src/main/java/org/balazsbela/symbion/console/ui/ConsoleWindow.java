@@ -1,44 +1,44 @@
 package org.balazsbela.symbion.console.ui;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-
-import javax.swing.JComponent;
-import javax.swing.SwingUtilities;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.balazsbela.symbion.console.api.Console;
+import org.balazsbela.symbion.console.api.MessageHandler;
+import org.balazsbela.symbion.console.client.ClientException;
+import org.balazsbela.symbion.console.controller.MainController;
+import org.balazsbela.symbion.models.ThreadModel;
+import org.balazsbela.symbion.visualizer.presentation.Visualizer;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.widgets.Group;
-import org.eclipse.swt.widgets.Table;
-import org.eclipse.swt.widgets.TabFolder;
-import org.eclipse.swt.widgets.TabItem;
-import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
-import org.symbion.console.client.Client;
-import org.symbion.console.client.ClientException;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.ShellAdapter;
+import org.eclipse.swt.events.ShellEvent;
+import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.TabFolder;
+import org.eclipse.swt.widgets.TabItem;
+import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.swt.widgets.TableItem;
+import org.eclipse.wb.swt.SWTResourceManager;
 
-public class ConsoleWindow {
+public class ConsoleWindow implements MessageHandler, Console {
 
 	private static final Log log = LogFactory.getLog(ConsoleWindow.class);
 
-	protected Shell shlProfilingConsole;
-	private Table table;
+	public static Shell shlProfilingConsole = new Shell();
+	private Table threadTable;
 	private Table ruleTable;
 	private Button btnConnect;
-
-	Client client;
-
+	private Thread visualizingThread;
+	
 	public ConsoleWindow() {
-		client = new Client();
 	}
 
 	/**
@@ -61,6 +61,7 @@ public class ConsoleWindow {
 	public void open() {
 		Display display = Display.getDefault();
 		createContents();
+		shlProfilingConsole.setImage(SWTResourceManager.getImage(ConsoleWindow.class, "/com/sun/java/swing/plaf/windows/icons/JavaCup32.png"));
 		shlProfilingConsole.open();
 		shlProfilingConsole.layout();
 		while (!shlProfilingConsole.isDisposed()) {
@@ -74,7 +75,6 @@ public class ConsoleWindow {
 	 * Create contents of the window.
 	 */
 	protected void createContents() {
-		shlProfilingConsole = new Shell();
 		shlProfilingConsole.setSize(617, 416);
 		shlProfilingConsole.setText("Profiling console");
 
@@ -93,6 +93,12 @@ public class ConsoleWindow {
 		btnConnect.setBounds(10, 10, 75, 25);
 		btnConnect.setText("Connect");
 
+		shlProfilingConsole.addShellListener(new ShellAdapter() {
+			public void shellClosed(ShellEvent e) {
+				System.exit(0);
+			}
+		});
+		
 		Button btnStartProfiling = new Button(shlProfilingConsole, SWT.NONE);
 		btnStartProfiling.addMouseListener(new MouseAdapter() {
 			@Override
@@ -112,12 +118,7 @@ public class ConsoleWindow {
 		btnNewButton.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseDown(MouseEvent arg0) {
-				try {
-					stopProfiling();
-				} catch (ClientException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				stopProfiling();
 			}
 		});
 		btnNewButton.addSelectionListener(new SelectionAdapter() {
@@ -132,8 +133,7 @@ public class ConsoleWindow {
 		btnSettings.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseDown(MouseEvent arg0) {
-				SettingsDialog sd = new SettingsDialog(shlProfilingConsole, SWT.DIALOG_TRIM);
-				sd.open();
+				openSettingsDialog();
 			}
 		});
 		btnSettings.setBounds(282, 10, 75, 25);
@@ -154,95 +154,154 @@ public class ConsoleWindow {
 		tblclmnPattern.setWidth(569);
 		tblclmnPattern.setText("Pattern");
 
-		TableItem tableItem = new TableItem(ruleTable, SWT.NONE);
-		tableItem.setText("org.balazsbela.FirmManagement.*(*)");
-
-		TableItem tableItem_1 = new TableItem(ruleTable, SWT.NONE);
-		tableItem_1.setText("org.balazsbela.AnotherPackage.*(*)");
-
 		TabItem tbtmThreads = new TabItem(tabFolder, SWT.NONE);
 		tbtmThreads.setText("Threads");
 
-		table = new Table(tabFolder, SWT.BORDER | SWT.FULL_SELECTION);
-		tbtmThreads.setControl(table);
-		table.setHeaderVisible(true);
-		table.setLinesVisible(true);
+		threadTable = new Table(tabFolder, SWT.BORDER | SWT.FULL_SELECTION);
+		tbtmThreads.setControl(threadTable);
+		threadTable.setHeaderVisible(true);
+		threadTable.setLinesVisible(true);
+
+		Button btnVisualize = new Button(shlProfilingConsole, SWT.NONE);
+		btnVisualize.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseDown(MouseEvent arg0) {
+				startVisualizer();
+			}
+		});
+		btnVisualize.setBounds(363, 10, 75, 25);
+		btnVisualize.setText("Visualize");
+
+		MainController.getInstance().setMessageHandler(this);
+		MainController.getInstance().setConsole(this);
 
 	}
 
-	void startProfiling() throws ClientException {
+	protected void startVisualizer() {
 
-		String ruleString = "";
-		for (TableItem ti : ruleTable.getItems()) {
-			ruleString += ti.getText() + ":accept" + ";";
+		if(visualizingThread!=null) {
+			visualizingThread.interrupt();			
 		}
-		client.setRuleString(ruleString);
-
-		Thread t = new Thread("SymbionStartProfilingThread") {
+		
+		
+		//Start the visualizer on a different thread.
+		visualizingThread = new Thread(new Runnable() {
+			
+			@Override
 			public void run() {
-				try {
-					client.startProfiling();
-				} catch (ClientException e) {
-					MessageDialog.openError(shlProfilingConsole, "Error", e.toString());
-					log.error(e);
-					e.printStackTrace();
-				}
-			};
-		};
-		t.setName("StartProfiling");
-		t.setPriority(Thread.MIN_PRIORITY);
-		t.setDaemon(false);
-		t.start();
+				Visualizer app = new Visualizer();
+				app.start();			
+				app.reloadData();
+			}
+		});
+				
+		visualizingThread.setPriority(Thread.MAX_PRIORITY);
+		visualizingThread.setDaemon(false);
+		visualizingThread.start();
+				
+	}
+
+	void startProfiling() throws ClientException {
+		MainController.getInstance().startProfiling();
 	}
 
 	void connectToRunningInstance() throws ClientException {
 
-		if (btnConnect.getText().equals("Connect")) {
+		if (!MainController.getInstance().clientIsConnected()) {
+			MainController.getInstance().connectToRunningInstance();
 			btnConnect.setText("Disconnect");
 		} else {
+			MainController.getInstance().disconnect();
 			btnConnect.setText("Connect");
 		}
 
-		Thread t = new Thread("SymbionConnectThread") {
-			public void run() {
-				try {
-					if (!client.isConnected()) {
-						client.connect("localhost", 31337);
-					} else {
-						client.disconnect();
-					}
-				} catch (ClientException e) {
-					MessageDialog.openError(null, "Error", e.toString());
-
-					log.error(e);
-					e.printStackTrace();
-				}
-			};
-		};
-		t.setName("Connect");
-		t.setPriority(Thread.MIN_PRIORITY);
-		t.setDaemon(false);
-		t.start();
-
 	}
 
-	void stopProfiling() throws ClientException {
+	void stopProfiling() {
+		MainController.getInstance().stopProfiling();
+	}
 
-	
-		Thread t = new Thread("SymbionStopProfilingThread") {
+	public void openSettingsDialog() {
+		SettingsDialog sd = new SettingsDialog(shlProfilingConsole, SWT.DIALOG_TRIM);
+		sd.setParent(this);
+		sd.open();
+	}
+
+	@Override
+	public void handleError(Exception e) {
+		final String message = e.getMessage();
+		Display.getDefault().syncExec(new Runnable() {
 			public void run() {
-				try {
-					client.stopProfiling();
-				} catch (ClientException e) {
-					MessageDialog.openError(shlProfilingConsole, "Error", e.toString());
-					log.error(e);
-					e.printStackTrace();
+				MessageDialog.openError(shlProfilingConsole, "Error", message);
+			}
+		});
+	}
+
+	@Override
+	public void displayMessage(String message) {
+		final String myMessage = message;
+		Display.getDefault().syncExec(new Runnable() {
+			public void run() {
+				MessageDialog.openInformation(shlProfilingConsole, "Message", myMessage);
+				LoadingDialog.getInstance(shlProfilingConsole, SWT.NONE).closeLoader();		
+			}
+		});
+	}
+	
+	@Override
+	public synchronized void openLoadingDialog() {		
+		Display.getDefault().syncExec(new Runnable() {
+			public void run() {
+				LoadingDialog.getInstance(shlProfilingConsole, SWT.NONE).open();
+				LoadingDialog.getInstance(shlProfilingConsole, SWT.NONE).showLoader();
+			}
+		});
+	}
+
+	@Override
+	public void updateListOfMatchedClasses(Set<String> matchedClasses) {
+		final Set<String> matched = matchedClasses;
+		Display.getDefault().syncExec(new Runnable() {
+			public void run() {
+				ruleTable.removeAll();				
+				for (String c : matched) {
+					TableItem ti = new TableItem(ruleTable, SWT.NONE);
+					ti.setText(c);
 				}
-			};
-		};
-		t.setName("StopProfiling");
-		t.setPriority(Thread.MIN_PRIORITY);
-		t.setDaemon(false);
-		t.start();
+			}
+		});
+	}
+
+	@Override
+	public void updateThreadList(Set<ThreadModel> threads) {
+		final Set<ThreadModel> threadModels = threads;
+		Display.getDefault().syncExec(new Runnable() {
+			public void run() {
+				threadTable.removeAll();				
+				for (ThreadModel c : threadModels) {
+					TableItem ti = new TableItem(threadTable, SWT.NONE);
+					ti.setText(c.toString());
+				}
+			}
+		});
+	}
+
+	@Override
+	public void closeLoadingDialog() {
+		Display.getDefault().syncExec(new Runnable() {
+			public void run() {			
+				LoadingDialog.getInstance(shlProfilingConsole, SWT.NONE).closeLoader();				
+			}
+		});
+	}
+
+	@Override
+	public void toggleDisconnectLabel() {
+		System.out.println("Disconnected!");
+		Display.getDefault().syncExec(new Runnable() {
+			public void run() {			
+				btnConnect.setText("Connect");
+			}
+		});
 	}
 }
